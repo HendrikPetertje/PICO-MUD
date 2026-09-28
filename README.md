@@ -38,6 +38,8 @@ After restarting the Pico, join the configured Wi-Fi network, then connect:
 telnet 192.168.4.1 8888
 ```
 
+Some telnet clients perform DNS lookups and negotiate telnet capabilities when connecting. This may take 15-20 seconds; after the connection is established, the rest of the session should be responsive.
+
 Use `/connect admin changeme` for the default administrator, or `/connect guest` to explore without an account.
 
 ## Commands

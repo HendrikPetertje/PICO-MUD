@@ -90,9 +90,9 @@ class CommandController:
             return self.rooms.build(session, verb, args)
         if verb == "destroy" and args.remaining().lower().startswith("room "):
             return self.rooms.build(session, verb, args)
-        if verb in ("create", "destroy", "move", "interaction"):
+        if verb in ("create", "destroy", "move", "interaction", "creature", "habbit"):
             return self.items.edit(session, verb, args)
-        if verb in ("use", "interactions"):
+        if verb in ("use", "interactions", "habbits"):
             return self.items.use(session, verb, args)
         if verb in ("say", "emote", "whisper", "page", "shout"):
             return self.communication.handle(session, verb, args)

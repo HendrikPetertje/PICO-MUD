@@ -24,15 +24,17 @@ class RoomController:
             require(session.can_enter(room) and session.room_id == room_id, "Room view changed; look again.")
             if way in room["exits"]:
                 yield game_view.exit_line(way, room["exits"][way])
-        yield "Items:\n"
-        for item_id in [i["id"] for i in self.rooms.get(room_id)["items"]]:
-            room = self.rooms.get(room_id)
-            require(session.can_enter(room) and session.room_id == room_id, "Room view changed; look again.")
-            try:
-                item = self.world.items.get(room_id, item_id)
-            except GameError:
-                continue
-            yield game_view.room_item_line(item)
+        for label, creature in (("Items", False), ("Creatures", True)):
+            yield label + ":\n"
+            for item_id in [i["id"] for i in self.rooms.get(room_id)["items"]]:
+                room = self.rooms.get(room_id)
+                require(session.can_enter(room) and session.room_id == room_id, "Room view changed; look again.")
+                try:
+                    item = self.world.items.get(room_id, item_id)
+                except GameError:
+                    continue
+                if bool(item.get("creature")) == creature:
+                    yield game_view.room_item_line(item)
         yield "Here: " + ", ".join(s.name() for s in self.sessions.live() if s.room_id == room_id) + "\n\n"
 
     def move(self, session, destination_id, way=None):

@@ -47,6 +47,15 @@ def action_entry(action, detailed=False):
     return result + "\n"
 
 
+def habbit_entry(job, detailed=False):
+    result = "{}: {} every {}s".format(job["id"], job["name"], job["interval_seconds"])
+    if detailed:
+        for field in ("emote", "chat_out"):
+            if field in job:
+                result += " {}: {}".format(field, job[field])
+    return result + "\n"
+
+
 def notification(message, prompt=True):
     return "\n" + message.rstrip("\n") + "\n" + ("> " if prompt else "")
 

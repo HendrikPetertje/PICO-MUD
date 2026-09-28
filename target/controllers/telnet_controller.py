@@ -2,6 +2,7 @@ from models.storage import GameError
 from controllers.session_controller import SessionController
 from controllers.notification_controller import NotificationController
 from controllers.command_controller import CommandController
+from controllers.habbit_controller import HabbitController
 from views import telnet_view
 
 
@@ -12,6 +13,7 @@ class TelnetController:
         self.notifications = NotificationController(self.sessions)
         self.sessions.notifications = self.notifications
         self.commands = CommandController(world, self.sessions, self.notifications)
+        self.habbits = HabbitController(world, self.sessions, self.notifications)
 
     def on_connect(self, client):
         session = self.sessions.new(client)
@@ -76,7 +78,7 @@ class TelnetController:
         self.sessions.disconnected(client)
 
     def on_tick(self, now_ms):
-        self.world.tick(now_ms)
+        self.habbits.tick(self.world.tick(now_ms))
         for session in list(self.sessions.sessions.values()):
             if not session.client.closed and session.client.closing_at is None:
                 session.pump()

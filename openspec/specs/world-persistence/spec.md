@@ -11,12 +11,19 @@ The system SHALL store users as an array in `/data/users.json`, rooms with
 nested items as an array in `/data/rooms.json`, and inbox arrays keyed by user
 id in `/data/mail.json`. Separate users, rooms, items and mail models SHALL own
 operations on this shared state. Items SHALL share room storage and its dirty
-flag, without an items file or duplicate database. Sessions SHALL NOT persist.
+flag, without an items file or duplicate database. An item MAY persist
+`creature: true` and a bounded list of cron-job definitions; both remain part of
+its nested room record. Sessions and elapsed cron-job scheduling state SHALL NOT
+persist.
 
 #### Scenario: Item edit uses room storage
 - **WHEN** a permitted player edits an item's description
 - **THEN** the room's nested item changes and only the rooms save unit is dirty
 - **AND** reconnecting or walking does not dirty any save unit
+
+#### Scenario: Creature cron configuration round trip
+- **WHEN** an owner saves an item with `creature: true` and configured cron jobs
+- **THEN** the nested item data survives restart while the first post-restart execution waits for a new elapsed interval
 
 ### Requirement: Numeric identities
 User and room ids and all stored references SHALL be positive integers, not
@@ -48,11 +55,18 @@ The system SHALL validate loaded types, ids, ownership, limits and references
 before accepting players. Malformed files or incomplete users/rooms pairs SHALL
 produce a serial diagnostic and fatal startup state without overwriting the
 files. Missing mail alongside valid users/rooms SHALL initialize empty inboxes.
-Stale temporary files SHALL NOT replace an existing valid primary file.
+Stale temporary files SHALL NOT replace an existing valid primary file. A
+creature flag, when present, SHALL be boolean and true. Cron-job records SHALL
+have unique positive numeric ids, valid bounded names and intervals, and valid
+optional output text.
 
 #### Scenario: Corrupt rooms file
 - **WHEN** rooms.json is malformed or refers to a nonexistent owner
 - **THEN** startup stops with a diagnostic and the existing files are preserved
+
+#### Scenario: Invalid cron record stops boot
+- **WHEN** a stored item contains a cron job with a duplicate id, non-positive interval, or invalid field type
+- **THEN** startup stops with a diagnostic and preserves the existing files
 
 ### Requirement: Dirty periodic persistence
 Successful persistent mutations SHALL mark the affected model dirty. Reads,
@@ -74,7 +88,8 @@ retry, report the failure and not prevent attempts to save other dirty files.
 
 ### Requirement: Configured limits and memory admission
 The system SHALL enforce MAX_USERS=15, MAX_ROOMS_PER_USER=10 (including home),
-MAX_ITEMS_PER_ROOM=5, MAX_INTERACTIONS_PER_ITEM=2, MAX_MAILS=10,
+MAX_ITEMS_PER_ROOM=5, MAX_INTERACTIONS_PER_ITEM=2, MAX_CRON_JOBS_PER_ITEM=3,
+MAX_MAILS=10,
 MAX_NAME_LENGTH=60, MAX_DESCRIPTION_LENGTH=600 for room/item/exit descriptions
 and MAX_TEXT_LENGTH=250 for activation/flavor text, chat and mail messages
 using config values. The description limit SHALL apply to edits and
@@ -102,3 +117,7 @@ through `/uptime`; configured maxima are ceilings, not guaranteed capacity.
 - **WHEN** a player submits 251 characters of chat, mail body, exit activation
   text or interaction flavor text
 - **THEN** the operation is rejected despite the longer room/item description limit
+
+#### Scenario: Cron output text is bounded
+- **WHEN** a builder submits chat or emote output longer than MAX_TEXT_LENGTH
+- **THEN** the operation is rejected without changing the cron job

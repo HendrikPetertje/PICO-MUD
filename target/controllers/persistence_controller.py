@@ -68,6 +68,7 @@ class PersistenceController:
         if self.save_elapsed >= self.config.SAVE_INTERVAL * 1000:
             self.save_elapsed = 0
             self.save()
+        return elapsed
 
     def create_user(self, name, password, admin=False):
         # Prepare both replacements before publishing either save unit.

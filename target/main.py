@@ -10,7 +10,7 @@ def validate(config):
     if config.TELNET_PORT > 65535:
         raise ValueError("TELNET_PORT must be at most 65535")
     for name in ("SAVE_INTERVAL", "MAX_USERS", "MAX_ROOMS_PER_USER", "MAX_ITEMS_PER_ROOM",
-                 "MAX_INTERACTIONS_PER_ITEM", "MAX_NAME_LENGTH", "MAX_DESCRIPTION_LENGTH", "MAX_TEXT_LENGTH", "MAX_MAILS",
+                 "MAX_INTERACTIONS_PER_ITEM", "MAX_CRON_JOBS_PER_ITEM", "MAX_NAME_LENGTH", "MAX_DESCRIPTION_LENGTH", "MAX_TEXT_LENGTH", "MAX_MAILS",
                  "MIN_FREE_MEMORY"):
         value = getattr(config, name)
         if type(value) is not int or value <= 0:

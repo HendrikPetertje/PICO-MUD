@@ -114,6 +114,65 @@ class Items:
         self._replace(room_id, [replacement if i["id"] == item["id"] else i
                                 for i in self.rooms.get(room_id)["items"]])
 
+    def creature(self, room_id, identity, value):
+        item = self.get(room_id, identity)
+        if bool(item.get("creature")) == value:
+            return
+        changed = item.copy()
+        if value:
+            memory_guard(self.config)
+            changed["creature"] = True
+        else:
+            changed.pop("creature", None)
+        self._replace(room_id, [changed if i["id"] == item["id"] else i
+                                for i in self.rooms.get(room_id)["items"]])
+
+    def cron(self, room_id, identity, operation, cron_id=None, field=None, value=None):
+        item = self.get(room_id, identity)
+        jobs = item.get("cron_jobs", [])
+        if operation == "add":
+            interval = value
+            require(len(jobs) < self.config.MAX_CRON_JOBS_PER_ITEM, "Cron job limit reached.")
+            text(field, self.config.MAX_NAME_LENGTH, "Cron job name")
+            require(positive(interval), "Interval must be positive.")
+            memory_guard(self.config)
+            changed = {"id": max([job["id"] for job in jobs] + [0]) + 1,
+                       "name": field, "interval_seconds": interval}
+            updated = jobs + [changed]
+        else:
+            job = next((job for job in jobs if job["id"] == cron_id), None)
+            require(job is not None, "No such cron job.")
+            if operation == "remove":
+                updated = [current for current in jobs if current["id"] != cron_id]
+            else:
+                changed = job.copy()
+                if field == "interval_seconds":
+                    require(positive(value), "Interval must be positive.")
+                elif field == "name":
+                    text(value, self.config.MAX_NAME_LENGTH, "Cron job name")
+                else:
+                    require(field in ("chat_out", "emote"), "Invalid cron job field.")
+                    if value is not None:
+                        text(value, self.config.MAX_TEXT_LENGTH, "Cron job " + field)
+                if changed.get(field) == value:
+                    return
+                if value is None:
+                    changed.pop(field, None)
+                else:
+                    memory_guard(self.config)
+                    changed[field] = value
+                updated = [changed if current["id"] == cron_id else current for current in jobs]
+        replacement = item.copy()
+        if updated:
+            replacement["cron_jobs"] = updated
+        else:
+            replacement.pop("cron_jobs", None)
+        self._replace(room_id, [replacement if i["id"] == item["id"] else i
+                                for i in self.rooms.get(room_id)["items"]])
+
+    def crons(self, item):
+        return item.get("cron_jobs", [])
+
     def validate(self):
         for room in self.rooms.data:
             require(len(room["items"]) <= self.config.MAX_ITEMS_PER_ROOM, "Item quota exceeded.")
@@ -124,6 +183,7 @@ class Items:
                 seen.add(item["id"])
                 text(item.get("name"), self.config.MAX_NAME_LENGTH, "Item name")
                 text(item.get("description"), self.config.MAX_DESCRIPTION_LENGTH, "Item description", empty=True)
+                require("creature" not in item or item["creature"] is True, "Invalid creature flag.")
                 actions = item.get("interactions")
                 require(type(actions) is list and len(actions) <= self.config.MAX_INTERACTIONS_PER_ITEM,
                         "Invalid interactions.")
@@ -136,3 +196,16 @@ class Items:
                     text(action.get("flavor_text"), self.config.MAX_TEXT_LENGTH, "Flavor text")
                     if "teleport_to_room_id" in action:
                         self.rooms.get(action["teleport_to_room_id"])
+                jobs = item.get("cron_jobs", [])
+                require(type(jobs) is list and len(jobs) <= self.config.MAX_CRON_JOBS_PER_ITEM,
+                        "Invalid cron jobs.")
+                job_ids = set()
+                for job in jobs:
+                    require(type(job) is dict and positive(job.get("id")) and job["id"] not in job_ids,
+                            "Invalid or duplicate cron job.")
+                    job_ids.add(job["id"])
+                    text(job.get("name"), self.config.MAX_NAME_LENGTH, "Cron job name")
+                    require(positive(job.get("interval_seconds")), "Invalid cron job interval.")
+                    for field in ("chat_out", "emote"):
+                        if field in job:
+                            text(job[field], self.config.MAX_TEXT_LENGTH, "Cron job " + field)

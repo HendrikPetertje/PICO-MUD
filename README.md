@@ -51,7 +51,7 @@ Every command begins with `/` and is case-insensitive. Plain text is sent to the
 | `/connect guest` | Enter as an anonymous guest. |
 | `/connect <name>` | Log in and enter the password at the next prompt. |
 | `/help [command]` | List commands or show detailed help for one command. |
-| `/look` | Show the current room, its exits, items, and players. |
+| `/look` | Show the current room, its exits, items, creatures, and players. |
 | `/go <direction>` | Take an exit. Short forms such as `/n` and `/s` work. |
 | `/who` | List connected players. |
 | `/say <text>` | Speak to everyone in the current room. |
@@ -62,6 +62,10 @@ Every command begins with `/` and is case-insensitive. Plain text is sent to the
 | `/mail send <user> <title> = <message>` | Send mail to a registered user. |
 | `/dig <direction> <room name>` | Create a connected room you own. |
 | `/create <item name>` | Create an item in a room you own. |
+| `/creature <item> [on|off]` | Classify an item as a creature. |
+| `/habbit add <item> <seconds> <name>` | Add timed activity to an item or creature. |
+| `/habbit edit <item> <id> <field> <value>` | Edit a habbit's interval, name, chat, or emote. |
+| `/habbits <item>` | List an item's timed activity. |
 | `/interaction add <item> <action> <text>` | Add an action to an item. |
 | `/user create <name> <password>` | Create a user. Administrator only. |
 | `/save` | Save changed world data immediately. Administrator only. |

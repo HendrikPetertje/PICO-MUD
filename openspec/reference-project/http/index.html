@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>PevaPub</title>
+  <style>
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: monospace;
+      background: linear-gradient(160deg, #1f1d2e 0%, #191724 40%, #26233a 100%);
+      background-attachment: fixed;
+      color: #e0def4;
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      inset: 0;
+      padding: 12px;
+      gap: 10px;
+      overflow: hidden;
+    }
+
+    #topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    h1 {
+      font-size: 0.85rem;
+      color: rgba(224, 222, 244, 0.6);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    nav {
+      display: flex;
+      gap: 4px;
+    }
+
+    nav a {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 44px;
+      height: 44px;
+      border-radius: 8px;
+      font-size: 1.1rem;
+      text-decoration: none;
+      background: rgba(224, 222, 244, 0.08);
+      border: 1px solid rgba(224, 222, 244, 0.25);
+      transition: background 0.15s;
+      line-height: 1;
+    }
+
+    nav a:hover {
+      background: rgba(224, 222, 244, 0.28);
+    }
+
+    nav a.disabled {
+      opacity: 0.35;
+      filter: grayscale(1) saturate(0.4) hue-rotate(190deg);
+      pointer-events: none;
+      cursor: default;
+    }
+
+    #log {
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      padding: 10px 12px;
+      background: rgba(224, 222, 244, 0.04);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(224, 222, 244, 0.08);
+      border-radius: 16px;
+      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.12), inset 0 1px 0 rgba(224, 222, 244, 0.2);
+    }
+
+    .msg {
+      display: flex;
+      gap: 8px;
+      align-items: baseline;
+      line-height: 1.4;
+    }
+
+    .msg .user {
+      color: #e0def4;
+      font-weight: bold;
+      white-space: nowrap;
+      flex-shrink: 0;
+      text-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    .msg .text {
+      color: rgba(224, 222, 244, 0.92);
+      word-break: break-word;
+    }
+
+    .msg .id {
+      color: rgba(224, 222, 244, 0.28);
+      font-size: 0.7rem;
+      flex-shrink: 0;
+    }
+
+    #form {
+      display: flex;
+      gap: 8px;
+      background: rgba(224, 222, 244, 0.04);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(224, 222, 244, 0.08);
+      border-radius: 14px;
+      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(224, 222, 244, 0.2);
+      padding: 8px;
+    }
+
+    #username {
+      width: 90px;
+      flex-shrink: 0;
+    }
+
+    #message {
+      flex: 1;
+    }
+
+    input {
+      background: rgba(224, 222, 244, 0.2);
+      border: 1px solid rgba(224, 222, 244, 0.4);
+      color: #e0def4;
+      padding: 8px 10px;
+      font-family: monospace;
+      font-size: 0.9rem;
+      border-radius: 8px;
+      outline: none;
+      transition: background 0.15s, border-color 0.15s;
+    }
+
+    input::placeholder {
+      color: rgba(224, 222, 244, 0.2);
+    }
+
+    input:focus {
+      background: rgba(224, 222, 244, 0.32);
+      border-color: rgba(224, 222, 244, 0.75);
+    }
+
+    button {
+      background: rgba(49, 116, 143, 0.6);
+      color: #e0def4;
+      border: 1px solid rgba(49, 116, 143, 0.4);
+      padding: 8px 14px;
+      font-family: monospace;
+      font-weight: bold;
+      cursor: pointer;
+      border-radius: 8px;
+      font-size: 1.1rem;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+      transition: background 0.15s;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    button:active {
+      background: rgba(49, 116, 143, 0.8);
+    }
+
+    button:disabled {
+      opacity: 0.4;
+      cursor: default;
+    }
+
+    #status {
+      font-size: 0.7rem;
+      color: rgba(224, 222, 244, 0.4);
+      text-align: right;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 5px;
+    }
+
+    #status-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: rgba(224, 222, 244, 0.3);
+      flex-shrink: 0;
+      transition: background 0.3s;
+    }
+
+    #status-dot.online {
+      background: #4ade80;
+    }
+
+    #status-dot.offline {
+      background: #f87171;
+    }
+
+    #status-dot.slow {
+      background: #fbbf24;
+    }
+
+    #banner {
+      display: none;
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      right: 12px;
+      background: rgba(235, 111, 146, 0.85);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      color: #e0def4;
+      font-size: 0.8rem;
+      text-align: center;
+      padding: 8px 14px;
+      border-radius: 10px;
+      border: 1px solid rgba(224, 222, 244, 0.3);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+      z-index: 10;
+    }
+
+    #banner.visible {
+      display: block;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="banner"></div>
+  <div id="topbar">
+    <h1>PevaPub :: Chat</h1>
+    <nav>
+      <a href="/" class="disabled" title="Home">🏠</a>
+      <a href="/info.html" title="Info">ℹ️</a>
+      <a href="/square.html" title="Square">🌳</a>
+      <a href="/shogi.html" title="Games">♟️</a>
+    </nav>
+  </div>
+  <div id="log"></div>
+  <div id="status"><span id="status-dot"></span><span id="status-text">connecting&hellip;</span></div>
+  <form id="form">
+    <input id="username" type="text" placeholder="name" maxlength="10" autocomplete="off" required>
+    <input id="message" type="text" placeholder="message" maxlength="250" autocomplete="off" required>
+    <button type="submit">&#8594;</button>
+  </form>
+
+  <script>
+    const log = document.getElementById('log');
+    const form = document.getElementById('form');
+    const status = document.getElementById('status-text');
+    const dot = document.getElementById('status-dot');
+    const banner = document.getElementById('banner');
+    const uInput = document.getElementById('username');
+    const mInput = document.getElementById('message');
+
+    // --- Status dot ---
+    function setStatus(state, text) {
+      status.textContent = text;
+      dot.className = state; // 'online' | 'slow' | 'offline'
+    }
+
+    // --- Error banner ---
+    let bannerTimer = null;
+    function showBanner(text, durationMs = 4000) {
+      clearTimeout(bannerTimer);
+      banner.textContent = text;
+      banner.classList.add('visible');
+      bannerTimer = setTimeout(() => banner.classList.remove('visible'), durationMs);
+    }
+
+    // --- Fetch with timeout ---
+    function fetchWithTimeout(url, options, timeout) {
+      const ctrl = new AbortController();
+      const slowTimer = setTimeout(() => setStatus('slow', 'slow\u2026'), 5000);
+      const deadTimer = setTimeout(() => setStatus('offline', 'disconnected'), 10000);
+      const killTimer = setTimeout(() => ctrl.abort(), timeout);
+      return fetch(url, {...options, signal: ctrl.signal}).finally(() => {
+        clearTimeout(slowTimer);
+        clearTimeout(deadTimer);
+        clearTimeout(killTimer);
+      });
+    }
+
+    // --- Messages ---
+    let lastId = 0;
+
+    function renderMessages(msgs) {
+      for (const msg of msgs) {
+        if (msg.id <= lastId) continue;
+        lastId = msg.id;
+        const div = document.createElement('div');
+        div.className = 'msg';
+        div.innerHTML =
+          `<span class="id">#${msg.id}</span>` +
+          `<span class="user">${esc(msg.u)}</span>` +
+          `<span class="text">${esc(msg.m)}</span>`;
+        log.appendChild(div);
+      }
+      log.scrollTop = log.scrollHeight;
+    }
+
+    function esc(str) {
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    // --- Poll ---
+    let polling = false;
+
+    async function poll() {
+      if (polling) return;
+      polling = true;
+      try {
+        const res = await fetchWithTimeout('/api/messages', {}, 15000);
+        if (res.ok) {
+          const msgs = await res.json();
+          renderMessages(msgs);
+          setStatus('online', 'connected');
+        } else {
+          setStatus('offline', 'disconnected');
+        }
+      } catch {
+        setStatus('offline', 'disconnected');
+      } finally {
+        polling = false;
+      }
+    }
+
+    // --- Send ---
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const u = uInput.value.trim();
+      const message = mInput.value.trim();
+      if (!u || !message) return;
+
+      const btn = form.querySelector('button');
+      btn.disabled = true;
+
+      try {
+        await fetchWithTimeout('/api/messages', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({u, message}),
+        }, 10000);
+        mInput.value = '';
+        await poll();
+      } catch {
+        showBanner('Message failed \u2014 connection problems');
+      } finally {
+        btn.disabled = false;
+        mInput.focus();
+      }
+    });
+
+    // --- Persist username ---
+    uInput.value = localStorage.getItem('pi-room-user') || '';
+    uInput.addEventListener('change', () => {
+      localStorage.setItem('pi-room-user', uInput.value);
+    });
+
+    poll();
+    setInterval(poll, 3000);
+
+    // --- Resize to visual viewport (keeps layout above keyboard) ---
+    function fitViewport() {
+      const vv = window.visualViewport;
+      if (!vv) return;
+      document.body.style.height = vv.height + 'px';
+      document.body.style.top = vv.offsetTop + 'px';
+    }
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', fitViewport);
+      window.visualViewport.addEventListener('scroll', fitViewport);
+      fitViewport();
+    }
+  </script>
+</body>
+
+</html>

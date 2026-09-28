@@ -1,0 +1,922 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>PevaPub :: Games</title>
+  <style>
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: monospace;
+      background: linear-gradient(160deg, #1f1d2e 0%, #191724 40%, #26233a 100%);
+      background-attachment: fixed;
+      color: #e0def4;
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      inset: 0;
+      padding: 12px;
+      gap: 10px;
+      overflow: hidden;
+    }
+
+    #topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    h1 {
+      font-size: 0.85rem;
+      color: rgba(49,116,143,0.4);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    nav {
+      display: flex;
+      gap: 4px;
+    }
+
+    nav a {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 44px;
+      height: 44px;
+      border-radius: 8px;
+      font-size: 1.1rem;
+      text-decoration: none;
+      background: rgba(224,222,244,0.06);
+      border: 1px solid rgba(224,222,244,0.1);
+      transition: background 0.15s;
+      line-height: 1;
+    }
+
+    nav a:hover {
+      background: rgba(224,222,244,0.12);
+    }
+
+    nav a.disabled {
+      opacity: 0.35;
+      filter: grayscale(1) saturate(0.4) hue-rotate(190deg);
+      pointer-events: none;
+      cursor: default;
+    }
+
+    /* --- Lobby --- */
+    #lobby {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      overflow: hidden;
+    }
+
+    #name-entry {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    #name-entry input {
+      flex: 1;
+      background: rgba(224,222,244,0.1);
+      border: 1px solid rgba(224,222,244,0.15);
+      color: #e0def4;
+      padding: 8px 10px;
+      font-family: monospace;
+      font-size: 0.9rem;
+      border-radius: 8px;
+      outline: none;
+      min-width: 0;
+    }
+
+    #name-entry input::placeholder {
+      color: rgba(224,222,244,0.2);
+    }
+
+    .btn {
+      background: rgba(49,116,143,0.6);
+      color: #e0def4;
+      border: 1px solid rgba(49,116,143,0.4);
+      padding: 8px 14px;
+      font-family: monospace;
+      font-weight: bold;
+      cursor: pointer;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .btn:active {
+      background: rgba(49,116,143,0.8);
+    }
+
+    .btn:disabled {
+      opacity: 0.4;
+      cursor: default;
+    }
+
+    #games-list {
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      padding: 10px 12px;
+      background: rgba(224,222,244,0.04);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(224,222,244,0.08);
+      border-radius: 16px;
+      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.12), inset 0 1px 0 rgba(224,222,244,0.2);
+    }
+
+    .game-item {
+      padding: 8px 10px;
+      background: rgba(224,222,244,0.04);
+      border-radius: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .game-item:hover {
+      background: rgba(224,222,244,0.1);
+    }
+
+    .game-item .info {
+      font-size: 0.8rem;
+    }
+
+    .game-item .status-badge {
+      font-size: 0.7rem;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: rgba(224,222,244,0.1);
+    }
+
+    /* --- Game view --- */
+    #game-view {
+      display: none;
+      flex: 1;
+      flex-direction: column;
+      gap: 6px;
+      overflow: hidden;
+    }
+
+    #game-info {
+      font-size: 0.75rem;
+      color: rgba(224,222,244,0.2);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    #board-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex: 1;
+      min-height: 0;
+    }
+
+    #board {
+      display: grid;
+      grid-template-columns: repeat(9, 1fr);
+      grid-template-rows: repeat(9, 1fr);
+      border: 2px solid rgba(224,222,244,0.2);
+      background: rgba(224,222,244,0.03);
+      border-radius: 4px;
+      aspect-ratio: 1;
+      height: 100%;
+      max-width: 100%;
+      min-height: 200px;
+    }
+
+    .cell {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid rgba(224,222,244,0.06);
+      font-size: min(5vw, 1.6rem);
+      cursor: pointer;
+      position: relative;
+      user-select: none;
+      -webkit-user-select: none;
+      transition: background 0.1s;
+      min-width: 0;
+      min-height: 0;
+    }
+
+    .cell.selected {
+      background: rgba(49, 116, 143, 0.35);
+    }
+
+    .cell.highlight {
+      background: rgba(196, 167, 231, 0.3);
+    }
+
+    .cell.highlight:hover {
+      background: rgba(196, 167, 231, 0.5);
+    }
+
+    .cell .piece {
+      line-height: 1;
+    }
+
+    .cell .piece.p2 {
+      transform: rotate(180deg);
+    }
+
+    .cell .piece.promoted {
+      color: #f6c177;
+    }
+
+    .cell .piece.gold {
+      color: #f6c177;
+    }
+
+    .cell .piece.silver {
+      color: #e0def4;
+    }
+
+    /* --- Captured pieces drawer --- */
+    .hand-bar {
+      display: flex;
+      gap: 6px;
+      padding: 6px 10px;
+      background: rgba(224,222,244,0.05);
+      border-radius: 10px;
+      border: 1px solid rgba(224,222,244,0.1);
+      min-height: 40px;
+    }
+
+    .hand {
+      display: flex;
+      gap: 2px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .hand-piece {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      font-size: 1.1rem;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background 0.1s;
+    }
+
+    .hand-piece:hover {
+      background: rgba(224,222,244,0.1);
+    }
+
+    .hand-piece.selected {
+      background: rgba(49, 116, 143, 0.35);
+    }
+
+    .hand-piece.p2 {
+      transform: rotate(180deg);
+    }
+
+    .hand-label {
+      font-size: 0.6rem;
+      color: rgba(224,222,244,0.15);
+      writing-mode: vertical-lr;
+    }
+
+    /* --- Promotion popup --- */
+    #promo-popup {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #promo-popup.visible {
+      display: flex;
+    }
+
+    #promo-box {
+      background: rgba(38, 35, 58, 0.95);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(224,222,244,0.12);
+      border-radius: 12px;
+      padding: 16px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    #promo-box p {
+      font-size: 0.8rem;
+    }
+
+    #promo-options {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+    }
+
+    .promo-choice {
+      width: 48px;
+      height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.8rem;
+      border-radius: 8px;
+      cursor: pointer;
+      border: 2px solid rgba(224,222,244,0.12);
+      background: rgba(224,222,244,0.04);
+      transition: background 0.15s;
+    }
+
+    .promo-choice:hover {
+      background: rgba(224,222,244,0.1);
+    }
+
+    .promo-choice .promoted {
+      color: #f6c177;
+    }
+
+    #back-btn {
+      align-self: flex-start;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="topbar">
+    <h1>PevaPub :: Games</h1>
+    <nav>
+      <a href="/" title="Home">🏠</a>
+      <a href="/info.html" title="Info">ℹ️</a>
+      <a href="/square.html" title="Square">🌳</a>
+      <a href="/shogi.html" class="disabled" title="Games">♟️</a>
+    </nav>
+  </div>
+
+  <!-- Lobby -->
+  <div id="lobby">
+    <div id="name-entry">
+      <input id="player-name" type="text" placeholder="your name" maxlength="10" autocomplete="off">
+      <button class="btn" id="create-btn" disabled>Create game</button>
+      <a href="/shogi-info.html" class="btn" style="text-decoration:none;text-align:center;">Rules</a>
+    </div>
+    <div id="games-list"><span style="color:rgba(224,222,244,0.4);font-size:0.8rem;">loading...</span></div>
+  </div>
+
+  <!-- Game view -->
+  <div id="game-view">
+    <div id="game-info">
+      <button class="btn" id="back-btn">&larr; lobby</button>
+      <span id="turn-info"></span>
+    </div>
+    <div class="hand-bar" id="hand-top-bar">
+      <div class="hand" id="hand-top"><span class="hand-label">opp</span></div>
+    </div>
+    <div id="board-container">
+      <div id="board"></div>
+    </div>
+    <div class="hand-bar" id="hand-bottom-bar">
+      <div class="hand" id="hand-bottom"><span class="hand-label">you</span></div>
+    </div>
+  </div>
+
+  <!-- Promotion popup -->
+  <div id="promo-popup">
+    <div id="promo-box">
+      <p>Promote this piece?</p>
+      <div id="promo-options">
+        <div class="promo-choice" id="promo-yes" title="Promote"></div>
+        <div class="promo-choice" id="promo-no" title="Keep"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Piece display mapping using chess UTF symbols
+    const PIECE_CHARS = {
+      'K': '♔', 'R': '♖', 'B': '♗', 'G': '♕', 'S': '♕',
+      'N': '♞', 'L': '♙', 'P': '♟',
+      '+R': '♖', '+B': '♗', '+S': '♕', '+N': '♞', '+L': '♙', '+P': '♟',
+    };
+
+    // Pieces that get special colors
+    const GOLD_PIECES = new Set(['G']);
+    const SILVER_PIECES = new Set(['S']);
+
+    function pieceChar(owner, piece) {
+      return PIECE_CHARS[piece] || '?';
+    }
+
+    const PROMOTED = new Set(['+R', '+B', '+S', '+N', '+L', '+P']);
+
+    const nameInput = document.getElementById('player-name');
+    const createBtn = document.getElementById('create-btn');
+    const gamesList = document.getElementById('games-list');
+    const lobby = document.getElementById('lobby');
+    const gameView = document.getElementById('game-view');
+    const boardEl = document.getElementById('board');
+    const turnInfo = document.getElementById('turn-info');
+    const backBtn = document.getElementById('back-btn');
+    const promoPopup = document.getElementById('promo-popup');
+    const promoYes = document.getElementById('promo-yes');
+    const promoNo = document.getElementById('promo-no');
+    const handTop = document.getElementById('hand-top');
+    const handBottom = document.getElementById('hand-bottom');
+
+    let myName = localStorage.getItem('pi-room-user') || '';
+    let myPlayer = null; // 1 or 2
+    let currentGame = null;
+    let selectedCell = null; // {r, c} or null
+    let selectedHand = null; // piece type from hand
+    let validMoves = [];
+    let pollTimer = null;
+    let pendingPromo = null; // {from_r, from_c, to_r, to_c}
+
+    nameInput.value = myName;
+    nameInput.addEventListener('input', () => {
+      myName = nameInput.value.trim();
+      localStorage.setItem('pi-room-user', myName);
+      createBtn.disabled = !myName;
+    });
+    createBtn.disabled = !myName;
+
+    // --- API helpers ---
+    async function api(url, method, body) {
+      const opts = {method};
+      if (body) {
+        opts.headers = {'Content-Type': 'application/json'};
+        opts.body = JSON.stringify(body);
+      }
+      const res = await fetch(url, opts);
+      return res.json();
+    }
+
+    // --- Lobby ---
+    async function refreshLobby() {
+      try {
+        const games = await api('/api/games', 'GET');
+        renderLobby(games);
+      } catch (e) {
+        gamesList.innerHTML = '<span style="color:rgba(224,222,244,0.4);font-size:0.8rem;">failed to load</span>';
+      }
+    }
+
+    function renderLobby(games) {
+      if (!games.length) {
+        gamesList.innerHTML = '<span style="color:rgba(224,222,244,0.4);font-size:0.8rem;">no games yet</span>';
+        return;
+      }
+      let html = '';
+      for (const g of games) {
+        const p1 = g.p1 || '???';
+        const p2 = g.p2 || '???';
+        let badge = g.status;
+        let clickable = '';
+        // Can rejoin own game or join waiting game
+        if (g.status === 'waiting' || g.status === 'active') {
+          clickable = ` onclick="joinOrView(${g.id})"`;
+        }
+        html += `<div class="game-item"${clickable}>` +
+          `<span class="info">#${g.id} ${esc(p1)} vs ${esc(p2)}</span>` +
+          `<span class="status-badge">${badge}</span></div>`;
+      }
+      gamesList.innerHTML = html;
+    }
+
+    createBtn.addEventListener('click', async () => {
+      if (!myName) return;
+      createBtn.disabled = true;
+      try {
+        const res = await api('/api/games/create', 'POST', {name: myName});
+        if (res.ok) {
+          myPlayer = res.your_player;
+          enterGame(res.id);
+        }
+      } finally {
+        createBtn.disabled = !myName;
+      }
+    });
+
+    window.joinOrView = async function (gameId) {
+      if (!myName) {nameInput.focus(); return;}
+      // Try to get game state first
+      const game = await api('/api/games/' + gameId, 'GET');
+      // Check if we are already a player
+      if (game.p1 === myName) {
+        myPlayer = 1;
+        enterGame(gameId);
+      } else if (game.p2 === myName) {
+        myPlayer = 2;
+        enterGame(gameId);
+      } else if (game.status === 'waiting') {
+        // Join
+        const res = await api('/api/games/' + gameId + '/join', 'POST', {name: myName});
+        if (res.ok) {
+          myPlayer = res.your_player;
+          enterGame(gameId);
+        }
+      } else {
+        // Spectate (just view)
+        myPlayer = null;
+        enterGame(gameId);
+      }
+    };
+
+    function enterGame(gameId) {
+      lobby.style.display = 'none';
+      gameView.style.display = 'flex';
+      currentGame = gameId;
+      selectedCell = null;
+      selectedHand = null;
+      validMoves = [];
+      pollGame();
+      if (pollTimer) clearInterval(pollTimer);
+      pollTimer = setInterval(pollGame, 3000);
+    }
+
+    backBtn.addEventListener('click', () => {
+      gameView.style.display = 'none';
+      lobby.style.display = 'flex';
+      currentGame = null;
+      if (pollTimer) clearInterval(pollTimer);
+      refreshLobby();
+    });
+
+    // --- Game rendering ---
+    async function pollGame() {
+      if (!currentGame) return;
+      try {
+        const game = await api('/api/games/' + currentGame, 'GET');
+        renderGame(game);
+      } catch (e) { }
+    }
+
+    function renderGame(game) {
+      // Update turn info
+      const isMyTurn = game.turn === myPlayer;
+      const turnName = game.turn === 1 ? (game.p1 || '???') : (game.p2 || '???');
+      if (game.status === 'waiting') {
+        turnInfo.textContent = 'waiting for opponent...';
+      } else if (game.status === 'finished') {
+        const winnerName = game.winner === 1 ? game.p1 : game.p2;
+        turnInfo.textContent = (game.winner === myPlayer) ? 'you won!' : esc(winnerName) + ' wins';
+      } else if (game.status === 'forfeit') {
+        turnInfo.textContent = 'game forfeited';
+      } else {
+        turnInfo.textContent = isMyTurn ? 'your turn' : esc(turnName) + "'s turn";
+      }
+
+      renderBoard(game.board);
+      renderHands(game.captured);
+    }
+
+    function renderBoard(board) {
+      // Determine orientation: player 1 sees board normally (row 0 at top)
+      // Player 2 sees it flipped
+      const flip = myPlayer === 2;
+      let html = '';
+      for (let ri = 0; ri < 9; ri++) {
+        for (let ci = 0; ci < 9; ci++) {
+          const r = flip ? (8 - ri) : ri;
+          const c = flip ? (8 - ci) : ci;
+          const cell = board[r][c];
+          let cls = 'cell';
+          if (selectedCell && selectedCell.r === r && selectedCell.c === c) cls += ' selected';
+          if (validMoves.some(m => m[0] === r && m[1] === c)) cls += ' highlight';
+
+          let inner = '';
+          if (cell) {
+            const owner = cell[0];
+            const piece = cell[1];
+            const ch = pieceChar(owner, piece);
+            let pcls = 'piece';
+            if (owner === (flip ? 1 : 2)) pcls += ' p2';
+            if (PROMOTED.has(piece)) pcls += ' promoted';
+            if (GOLD_PIECES.has(piece)) pcls += ' gold';
+            if (SILVER_PIECES.has(piece)) pcls += ' silver';
+            inner = `<span class="${pcls}">${ch}</span>`;
+          }
+          html += `<div class="${cls}" data-r="${r}" data-c="${c}">${inner}</div>`;
+        }
+      }
+      boardEl.innerHTML = html;
+    }
+
+    function renderHands(captured) {
+      const myHand = captured[myPlayer] || [];
+      const oppPlayer = myPlayer === 1 ? 2 : 1;
+      const oppHand = captured[oppPlayer] || [];
+
+      handTop.innerHTML = '<span class="hand-label">opp</span>';
+      for (const p of oppHand) {
+        const ch = pieceChar(oppPlayer, p);
+        handTop.innerHTML += `<span class="hand-piece p2">${ch}</span>`;
+      }
+
+      handBottom.innerHTML = '<span class="hand-label">you</span>';
+      for (const p of myHand) {
+        const ch = pieceChar(myPlayer, p);
+        const cls = (selectedHand === p) ? 'hand-piece selected' : 'hand-piece';
+        handBottom.innerHTML += `<span class="${cls}" data-piece="${p}">${ch}</span>`;
+      }
+    }
+
+    // --- Interaction ---
+    boardEl.addEventListener('click', (e) => {
+      const cell = e.target.closest('.cell');
+      if (!cell) return;
+      const r = parseInt(cell.dataset.r);
+      const c = parseInt(cell.dataset.c);
+      handleCellClick(r, c);
+    });
+
+    handBottom.addEventListener('click', (e) => {
+      const el = e.target.closest('.hand-piece');
+      if (!el || !el.dataset.piece) return;
+      handleHandClick(el.dataset.piece);
+    });
+
+    async function handleCellClick(r, c) {
+      // If we have a hand piece selected, try to drop it
+      if (selectedHand) {
+        await doDrop(selectedHand, r, c);
+        return;
+      }
+
+      // If clicking a highlighted move target
+      if (validMoves.some(m => m[0] === r && m[1] === c) && selectedCell) {
+        await doMove(selectedCell.r, selectedCell.c, r, c);
+        return;
+      }
+
+      // Select own piece
+      selectedCell = {r, c};
+      selectedHand = null;
+      // Get valid moves from the server-side logic (computed client-side for responsiveness)
+      validMoves = getValidMoves(r, c);
+      await pollGame(); // re-render with selection
+    }
+
+    function handleHandClick(piece) {
+      if (selectedHand === piece) {
+        selectedHand = null;
+        validMoves = [];
+      } else {
+        selectedHand = piece;
+        selectedCell = null;
+        validMoves = getDropTargets(piece);
+      }
+      pollGame();
+    }
+
+    function getValidMoves(r, c) {
+      // Quick client-side move calculation for highlighting
+      // We'll read from the last-rendered board state
+      // Actually we need the board data - store it
+      if (!lastBoard) return [];
+      const cell = lastBoard[r][c];
+      if (!cell || cell[0] !== myPlayer) return [];
+      return computeMoves(cell[0], cell[1], r, c, lastBoard);
+    }
+
+    function getDropTargets(piece) {
+      if (!lastBoard) return [];
+      const targets = [];
+
+      // Pre-check nifu: find columns that already have our unpromoted pawn
+      const pawnCols = new Set();
+      if (piece === 'P') {
+        for (let r = 0; r < 9; r++) {
+          for (let c = 0; c < 9; c++) {
+            const cell = lastBoard[r][c];
+            if (cell && cell[0] === myPlayer && cell[1] === 'P') {
+              pawnCols.add(c);
+            }
+          }
+        }
+      }
+
+      for (let r = 0; r < 9; r++) {
+        for (let c = 0; c < 9; c++) {
+          if (lastBoard[r][c]) continue; // not empty
+
+          // Cannot drop where piece would have no legal move
+          if (piece === 'P' || piece === 'L') {
+            if (myPlayer === 1 && r === 0) continue;
+            if (myPlayer === 2 && r === 8) continue;
+          }
+          if (piece === 'N') {
+            if (myPlayer === 1 && r <= 1) continue;
+            if (myPlayer === 2 && r >= 7) continue;
+          }
+
+          // Nifu: no two unpromoted pawns in same column
+          if (piece === 'P' && pawnCols.has(c)) continue;
+
+          targets.push([r, c]);
+        }
+      }
+      return targets;
+    }
+
+    let lastBoard = null;
+
+    // Override renderGame to store board
+    const _origRenderGame = renderGame;
+    renderGame = function (game) {
+      lastBoard = game.board;
+      _origRenderGame(game);
+    };
+
+    async function doMove(fr, fc, tr, tc) {
+      const piece = lastBoard[fr][fc][1];
+      const owner = lastBoard[fr][fc][0];
+
+      // Check if promotion is possible
+      if (canPromote(owner, piece, fr, tr)) {
+        if (mustPromote(owner, piece, tr)) {
+          await sendMove(fr, fc, tr, tc, true);
+        } else {
+          // Show promotion popup
+          showPromoPopup(piece, fr, fc, tr, tc);
+        }
+      } else {
+        await sendMove(fr, fc, tr, tc, false);
+      }
+    }
+
+    async function sendMove(fr, fc, tr, tc, promote) {
+      selectedCell = null;
+      validMoves = [];
+      try {
+        await api('/api/games/' + currentGame + '/move', 'POST', {
+          player: myPlayer, from_r: fr, from_c: fc, to_r: tr, to_c: tc, promote
+        });
+      } catch (e) { }
+      await pollGame();
+    }
+
+    async function doDrop(piece, r, c) {
+      selectedHand = null;
+      validMoves = [];
+      try {
+        await api('/api/games/' + currentGame + '/drop', 'POST', {
+          player: myPlayer, piece, to_r: r, to_c: c
+        });
+      } catch (e) { }
+      await pollGame();
+    }
+
+    function showPromoPopup(piece, fr, fc, tr, tc) {
+      pendingPromo = {fr, fc, tr, tc};
+      const ch = pieceChar(myPlayer, piece);
+      const promotedPiece = getPromoted(piece);
+      const pch = pieceChar(myPlayer, promotedPiece);
+      promoYes.innerHTML = `<span class="promoted">${pch}</span>`;
+      promoNo.innerHTML = ch;
+      promoPopup.classList.add('visible');
+    }
+
+    promoYes.addEventListener('click', async () => {
+      promoPopup.classList.remove('visible');
+      if (pendingPromo) {
+        const p = pendingPromo;
+        pendingPromo = null;
+        await sendMove(p.fr, p.fc, p.tr, p.tc, true);
+      }
+    });
+
+    promoNo.addEventListener('click', async () => {
+      promoPopup.classList.remove('visible');
+      if (pendingPromo) {
+        const p = pendingPromo;
+        pendingPromo = null;
+        await sendMove(p.fr, p.fc, p.tr, p.tc, false);
+      }
+    });
+
+    // --- Client-side move computation (mirrors server logic for UI responsiveness) ---
+    const PROMOTABLE = new Set(['R', 'B', 'S', 'N', 'L', 'P']);
+    const PROMO_MAP = {'R': '+R', 'B': '+B', 'S': '+S', 'N': '+N', 'L': '+L', 'P': '+P'};
+
+    function getPromoted(piece) {return PROMO_MAP[piece] || piece;}
+
+    function canPromote(owner, piece, fromR, toR) {
+      if (!PROMOTABLE.has(piece)) return false;
+      if (owner === 1) return fromR <= 2 || toR <= 2;
+      return fromR >= 6 || toR >= 6;
+    }
+
+    function mustPromote(owner, piece, toR) {
+      if (piece === 'P' || piece === 'L') {
+        if (owner === 1 && toR === 0) return true;
+        if (owner === 2 && toR === 8) return true;
+      }
+      if (piece === 'N') {
+        if (owner === 1 && toR <= 1) return true;
+        if (owner === 2 && toR >= 7) return true;
+      }
+      return false;
+    }
+
+    function computeMoves(owner, piece, r, c, board) {
+      const moves = [];
+      const fwd = owner === 1 ? -1 : 1;
+
+      function inBounds(rr, cc) {return rr >= 0 && rr < 9 && cc >= 0 && cc < 9;}
+      function canLand(rr, cc) {
+        if (!inBounds(rr, cc)) return false;
+        const cell = board[rr][cc];
+        return !cell || cell[0] !== owner;
+      }
+      function add(rr, cc) {if (canLand(rr, cc)) moves.push([rr, cc]);}
+      function slide(dr, dc) {
+        let rr = r + dr, cc = c + dc;
+        while (inBounds(rr, cc)) {
+          const cell = board[rr][cc];
+          if (!cell) {moves.push([rr, cc]);}
+          else {if (cell[0] !== owner) moves.push([rr, cc]); break;}
+          rr += dr; cc += dc;
+        }
+      }
+
+      if (piece === 'K') {
+        for (let dr = -1; dr <= 1; dr++)
+          for (let dc = -1; dc <= 1; dc++)
+            if (dr || dc) add(r + dr, c + dc);
+      } else if (piece === 'G' || piece === '+S' || piece === '+N' || piece === '+L' || piece === '+P') {
+        for (let dc = -1; dc <= 1; dc++) add(r + fwd, c + dc);
+        add(r, c - 1); add(r, c + 1); add(r - fwd, c);
+      } else if (piece === 'S') {
+        for (let dc = -1; dc <= 1; dc++) add(r + fwd, c + dc);
+        add(r - fwd, c - 1); add(r - fwd, c + 1);
+      } else if (piece === 'N') {
+        add(r + 2 * fwd, c - 1); add(r + 2 * fwd, c + 1);
+      } else if (piece === 'L') {
+        slide(fwd, 0);
+      } else if (piece === 'P') {
+        add(r + fwd, c);
+      } else if (piece === 'R') {
+        slide(-1, 0); slide(1, 0); slide(0, -1); slide(0, 1);
+      } else if (piece === '+R') {
+        slide(-1, 0); slide(1, 0); slide(0, -1); slide(0, 1);
+        for (let dr of [-1, 1]) for (let dc of [-1, 1]) add(r + dr, c + dc);
+      } else if (piece === 'B') {
+        slide(-1, -1); slide(-1, 1); slide(1, -1); slide(1, 1);
+      } else if (piece === '+B') {
+        slide(-1, -1); slide(-1, 1); slide(1, -1); slide(1, 1);
+        add(r - 1, c); add(r + 1, c); add(r, c - 1); add(r, c + 1);
+      }
+      return moves;
+    }
+
+    // --- Utility ---
+    function esc(str) {
+      return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    // --- Init ---
+    refreshLobby();
+    setInterval(() => {if (lobby.style.display !== 'none') refreshLobby();}, 3000);
+
+    // --- Viewport resize ---
+    function fitViewport() {
+      const vv = window.visualViewport;
+      if (!vv) return;
+      document.body.style.height = vv.height + 'px';
+      document.body.style.top = vv.offsetTop + 'px';
+    }
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', fitViewport);
+      window.visualViewport.addEventListener('scroll', fitViewport);
+      fitViewport();
+    }
+  </script>
+</body>
+
+</html>

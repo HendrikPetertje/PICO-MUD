@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>PevaPub :: Square</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: monospace;
+      background: linear-gradient(160deg, #1f1d2e 0%, #191724 40%, #26233a 100%);
+      background-attachment: fixed;
+      color: #e0def4;
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      inset: 0;
+      padding: 12px;
+      gap: 10px;
+      overflow: hidden;
+    }
+
+    #topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    h1 {
+      font-size: 0.85rem;
+      color: rgba(224,222,244,0.6);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    nav {
+      display: flex;
+      gap: 4px;
+    }
+
+    nav a {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 44px;
+      height: 44px;
+      border-radius: 8px;
+      font-size: 1.1rem;
+      text-decoration: none;
+      background: rgba(224,222,244,0.04);
+      border: 1px solid rgba(224,222,244,0.08);
+      transition: background 0.15s;
+      line-height: 1;
+    }
+
+    nav a:hover {
+      background: rgba(224,222,244,0.12);
+    }
+
+    nav a.disabled {
+      opacity: 0.35;
+      filter: grayscale(1) saturate(0.4) hue-rotate(190deg);
+      pointer-events: none;
+      cursor: default;
+    }
+
+    /* --- Setup screen --- */
+    #setup {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      padding: 24px;
+      background: rgba(224,222,244,0.04);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(224,222,244,0.08);
+      border-radius: 16px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.3);
+    }
+
+    #setup input {
+      background: rgba(224,222,244,0.06);
+      border: 1px solid rgba(224,222,244,0.15);
+      color: #e0def4;
+      padding: 10px 14px;
+      font-family: monospace;
+      font-size: 0.9rem;
+      border-radius: 8px;
+      outline: none;
+      width: 200px;
+      text-align: center;
+    }
+
+    #setup input::placeholder { color: #6e6a86; }
+    #setup input:focus { border-color: #c4a7e7; }
+
+    #char-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 60px);
+      gap: 8px;
+    }
+
+    .char-option {
+      width: 60px;
+      height: 60px;
+      border: 2px solid rgba(224,222,244,0.1);
+      border-radius: 8px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: border-color 0.15s, background 0.15s;
+      background: rgba(224,222,244,0.04);
+    }
+
+    .char-option:hover { border-color: rgba(224,222,244,0.3); }
+    .char-option.selected { border-color: #9ccfd8; background: rgba(49,116,143,0.2); }
+
+    .char-option .char-sprite {
+      background: url(/sprite_sheet.png);
+      display: inline-block;
+      width: 45px;
+      height: 45px;
+      background-size: 135px 137px;
+      image-rendering: pixelated;
+    }
+
+    #enter-btn {
+      background: rgba(49,116,143,0.6);
+      color: #e0def4;
+      border: 1px solid rgba(49,116,143,0.4);
+      padding: 10px 24px;
+      font-family: monospace;
+      font-weight: bold;
+      cursor: pointer;
+      border-radius: 8px;
+      font-size: 0.9rem;
+    }
+
+    #enter-btn:disabled { opacity: 0.4; cursor: default; }
+    #enter-btn:active { background: rgba(49,116,143,0.8); }
+
+    /* --- Game screen --- */
+    #game {
+      display: none;
+      flex: 1;
+      flex-direction: column;
+      gap: 10px;
+      overflow: hidden;
+    }
+
+    #viewport {
+      flex: 1;
+      overflow: hidden;
+      position: relative;
+      cursor: pointer;
+      border: 1px solid rgba(224,222,244,0.08);
+      border-radius: 16px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.3);
+    }
+
+    #world {
+      position: absolute;
+      width: 1254px;
+      height: 1254px;
+      background: url(/background.jpg) no-repeat top left;
+      background-size: 1254px 1254px;
+      image-rendering: pixelated;
+    }
+
+    .player {
+      position: absolute;
+      width: 30px;
+      height: 30px;
+      background: url(/sprite_sheet.png);
+      background-size: 90px 91px;
+      image-rendering: pixelated;
+      z-index: 10;
+    }
+
+    .chat-bubble {
+      position: absolute;
+      background: rgba(38,35,58,0.92);
+      border: 1px solid rgba(224,222,244,0.15);
+      color: #e0def4;
+      font-size: 0.7rem;
+      padding: 3px 7px;
+      border-radius: 6px;
+      white-space: nowrap;
+      max-width: 150px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      z-index: 20;
+      pointer-events: none;
+      transition: opacity 0.3s;
+    }
+
+    .player-name {
+      position: absolute;
+      color: #e0def4;
+      font-size: 0.55rem;
+      white-space: nowrap;
+      text-align: center;
+      z-index: 15;
+      pointer-events: none;
+      background: rgba(25,23,36,0.7);
+      padding: 1px 4px;
+      border-radius: 3px;
+    }
+
+    /* --- Chat input bar --- */
+    #chat-bar {
+      display: flex;
+      gap: 8px;
+      padding: 8px;
+      background: rgba(224,222,244,0.04);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(224,222,244,0.08);
+      border-radius: 14px;
+    }
+
+    #chat-bar input {
+      flex: 1;
+      background: rgba(224,222,244,0.06);
+      border: 1px solid rgba(224,222,244,0.15);
+      color: #e0def4;
+      padding: 8px 10px;
+      font-family: monospace;
+      font-size: 0.85rem;
+      border-radius: 8px;
+      outline: none;
+    }
+
+    #chat-bar input::placeholder { color: #6e6a86; }
+    #chat-bar input:focus { border-color: #c4a7e7; }
+
+    #chat-bar button {
+      background: rgba(49,116,143,0.6);
+      color: #e0def4;
+      border: 1px solid rgba(49,116,143,0.4);
+      padding: 8px 14px;
+      font-family: monospace;
+      font-weight: bold;
+      cursor: pointer;
+      border-radius: 8px;
+      font-size: 1rem;
+    }
+
+    #chat-bar button:active { background: rgba(49,116,143,0.8); }
+
+    /* --- Loading screen --- */
+    #loading {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      background: linear-gradient(160deg, #1f1d2e 0%, #191724 40%, #26233a 100%);
+      z-index: 100;
+      transition: opacity 0.4s;
+    }
+
+    #loading.done { opacity: 0; pointer-events: none; }
+
+    #loading p {
+      color: #908caa;
+      font-size: 0.8rem;
+    }
+
+    .loader {
+      width: 24px;
+      height: 24px;
+      border: 3px solid rgba(224,222,244,0.1);
+      border-top-color: #9ccfd8;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+  <div id="loading">
+    <div class="loader"></div>
+    <p>loading assets...</p>
+  </div>
+
+  <div id="topbar">
+    <h1>PevaPub :: Square</h1>
+    <nav>
+      <a href="/" title="Home">🏠</a>
+      <a href="/info.html" title="Info">ℹ️</a>
+      <a href="/square.html" class="disabled" title="Square">🌳</a>
+      <a href="/shogi.html" title="Games">♟️</a>
+    </nav>
+  </div>
+
+  <!-- Setup screen -->
+  <div id="setup">
+    <input id="name-input" type="text" placeholder="your name" maxlength="10" autocomplete="off">
+    <p style="font-size:0.75rem;color:#6e6a86;">pick a character</p>
+    <div id="char-grid"></div>
+    <button id="enter-btn" disabled>Enter the square</button>
+  </div>
+
+  <!-- Game screen -->
+  <div id="game">
+    <div id="viewport">
+      <div id="world"></div>
+    </div>
+    <div id="chat-bar">
+      <input id="chat-input" type="text" placeholder="say something..." maxlength="120" autocomplete="off">
+      <button id="chat-send">&#8594;</button>
+    </div>
+  </div>
+
+<script>
+// --- Preload assets ---
+(function preload() {
+  const assets = ['/background.jpg', '/sprite_sheet.png'];
+  let loaded = 0;
+  const loading = document.getElementById('loading');
+
+  assets.forEach(src => {
+    const img = new Image();
+    img.onload = img.onerror = () => {
+      loaded++;
+      if (loaded >= assets.length) {
+        loading.classList.add('done');
+        setTimeout(() => loading.remove(), 500);
+      }
+    };
+    img.src = src;
+  });
+})();
+
+// --- Sprite positions for characters (source 135x137, each char 45x46) ---
+// Display at 30px: background-size = 90px 91px (sheet * 2/3)
+const CHAR_POSITIONS = [
+  {x: 0, y: 0},       // char 1
+  {x: -45, y: 0},     // char 2
+  {x: -90, y: 0},     // char 3
+  {x: 0, y: -46},     // char 4
+  {x: -45, y: -46},   // char 5
+  {x: -90, y: -46},   // char 6
+  {x: 0, y: -92},     // char 7
+  {x: -45, y: -92},   // char 8
+];
+
+// World config — background is 1254x1254
+const WORLD_W = 1254;
+const WORLD_H = 1254;
+
+// Walkable area (water ends at ~150px on the 627px image, stretched to 1254 = 300px)
+const MIN_WALK_Y = 300;
+const MAX_WALK_Y = WORLD_H - 30;
+
+// --- State ---
+let myName = localStorage.getItem('pi-room-user') || '';
+let myChar = 1;
+let joined = false;
+let myX = WORLD_W / 2;
+let myY = 900;
+let targetX = myX;
+let targetY = myY;
+let walking = false;
+let lastChatId = 0;
+let bubbles = {}; // name -> {msg, timer}
+
+const nameInput = document.getElementById('name-input');
+const charGrid = document.getElementById('char-grid');
+const enterBtn = document.getElementById('enter-btn');
+const setup = document.getElementById('setup');
+const game = document.getElementById('game');
+const viewport = document.getElementById('viewport');
+const world = document.getElementById('world');
+const chatInput = document.getElementById('chat-input');
+const chatSend = document.getElementById('chat-send');
+
+// --- Setup ---
+nameInput.value = myName;
+nameInput.addEventListener('input', () => {
+  myName = nameInput.value.trim();
+  localStorage.setItem('pi-room-user', myName);
+  updateEnterBtn();
+});
+
+function updateEnterBtn() {
+  enterBtn.disabled = !myName || !myChar;
+}
+
+// Build character grid
+for (let i = 0; i < 8; i++) {
+  const div = document.createElement('div');
+  div.className = 'char-option' + (i === 0 ? ' selected' : '');
+  const pos = CHAR_POSITIONS[i];
+  div.innerHTML = `<div class="char-sprite" style="background-position: ${pos.x}px ${pos.y}px;"></div>`;
+  div.addEventListener('click', () => {
+    document.querySelectorAll('.char-option').forEach(el => el.classList.remove('selected'));
+    div.classList.add('selected');
+    myChar = i + 1;
+    updateEnterBtn();
+  });
+  charGrid.appendChild(div);
+}
+
+updateEnterBtn();
+
+enterBtn.addEventListener('click', async () => {
+  if (!myName || !myChar) return;
+  enterBtn.disabled = true;
+  try {
+    const res = await fetch('/api/square/join', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({name: myName, char: myChar})
+    });
+    const data = await res.json();
+    if (data.ok) {
+      joined = true;
+      setup.style.display = 'none';
+      game.style.display = 'flex';
+      startGameLoop();
+    }
+  } catch (e) {}
+  enterBtn.disabled = false;
+});
+
+// --- Camera ---
+function updateCamera() {
+  const vw = viewport.clientWidth;
+  const vh = viewport.clientHeight;
+  // Offset so player is centered in viewport
+  let ox = myX - vw / 2;
+  let oy = myY - vh / 2;
+  // Clamp so we don't show beyond world edges
+  // If viewport is larger than world on an axis, center it
+  if (vw >= WORLD_W) {
+    ox = -(vw - WORLD_W) / 2;
+  } else {
+    ox = Math.max(0, Math.min(ox, WORLD_W - vw));
+  }
+  if (vh >= WORLD_H) {
+    oy = -(vh - WORLD_H) / 2;
+  } else {
+    oy = Math.max(0, Math.min(oy, WORLD_H - vh));
+  }
+  world.style.left = -ox + 'px';
+  world.style.top = -oy + 'px';
+  world.style.transform = '';
+}
+
+// --- Click to move ---
+viewport.addEventListener('click', (e) => {
+  const rect = viewport.getBoundingClientRect();
+  const vw = viewport.clientWidth;
+  const vh = viewport.clientHeight;
+  // Current camera offset (same logic as updateCamera)
+  let ox, oy;
+  if (vw >= WORLD_W) {
+    ox = -(vw - WORLD_W) / 2;
+  } else {
+    ox = Math.max(0, Math.min(myX - vw / 2, WORLD_W - vw));
+  }
+  if (vh >= WORLD_H) {
+    oy = -(vh - WORLD_H) / 2;
+  } else {
+    oy = Math.max(0, Math.min(myY - vh / 2, WORLD_H - vh));
+  }
+
+  targetX = ox + (e.clientX - rect.left);
+  targetY = oy + (e.clientY - rect.top);
+
+  // Clamp to walkable area
+  targetX = Math.max(0, Math.min(targetX, WORLD_W));
+  targetY = Math.max(MIN_WALK_Y, Math.min(targetY, MAX_WALK_Y));
+  walking = true;
+
+  // Single request to server with target destination
+  fetch('/api/square/move', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({name: myName, x: Math.round(targetX), y: Math.round(targetY)})
+  }).catch(() => {});
+});
+
+// --- Walk animation ---
+const SPEED = 2.5; // px per frame
+
+function walkStep() {
+  if (!walking) return;
+  const dx = targetX - myX;
+  const dy = targetY - myY;
+  const dist = Math.sqrt(dx * dx + dy * dy);
+  if (dist < SPEED) {
+    myX = targetX;
+    myY = targetY;
+    walking = false;
+  } else {
+    myX += (dx / dist) * SPEED;
+    myY += (dy / dist) * SPEED;
+  }
+  updateCamera();
+  renderPlayers();
+}
+
+// Send heartbeat (current position) to stay visible
+function sendHeartbeat() {
+  fetch('/api/square/move', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({name: myName, x: Math.round(myX), y: Math.round(myY)})
+  }).catch(() => {});
+}
+
+// --- Render players ---
+let playersData = []; // from server: {name, x, y, tx, ty, char}
+let otherPositions = {}; // name -> {x, y} interpolated positions
+
+function interpolateOthers() {
+  for (const p of playersData) {
+    if (p.name === myName) continue;
+    if (!otherPositions[p.name]) {
+      otherPositions[p.name] = {x: p.tx, y: p.ty};
+    }
+    const op = otherPositions[p.name];
+    const dx = p.tx - op.x;
+    const dy = p.ty - op.y;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    if (dist < SPEED) {
+      op.x = p.tx;
+      op.y = p.ty;
+    } else {
+      op.x += (dx / dist) * SPEED;
+      op.y += (dy / dist) * SPEED;
+    }
+  }
+}
+
+function renderPlayers() {
+  // Remove old player elements
+  world.querySelectorAll('.player, .player-name, .chat-bubble').forEach(el => el.remove());
+
+  // Build list: others use interpolated positions, self uses local position
+  const allPlayers = [];
+  for (const p of playersData) {
+    if (p.name === myName) continue;
+    const op = otherPositions[p.name] || {x: p.tx, y: p.ty};
+    allPlayers.push({name: p.name, x: op.x, y: op.y, char: p.char});
+  }
+  allPlayers.push({name: myName, x: myX, y: myY, char: myChar});
+
+  for (const p of allPlayers) {
+    const pos = CHAR_POSITIONS[p.char - 1];
+    const el = document.createElement('div');
+    el.className = 'player';
+    el.style.left = (p.x - 15) + 'px';
+    el.style.top = (p.y - 30) + 'px';
+    // 30px display from 45px sprite: scale = 30/45 = 2/3
+    el.style.backgroundPosition = `${pos.x * 2/3}px ${pos.y * 2/3}px`;
+    world.appendChild(el);
+
+    // Name label (below character)
+    const label = document.createElement('div');
+    label.className = 'player-name';
+    label.textContent = p.name;
+    label.style.left = (p.x - 25) + 'px';
+    label.style.top = (p.y + 2) + 'px';
+    label.style.width = '50px';
+    world.appendChild(label);
+
+    // Chat bubble (above character)
+    if (bubbles[p.name]) {
+      const bub = document.createElement('div');
+      bub.className = 'chat-bubble';
+      bub.textContent = bubbles[p.name].msg;
+      bub.style.left = (p.x - 30) + 'px';
+      bub.style.top = (p.y - 48) + 'px';
+      world.appendChild(bub);
+    }
+  }
+}
+
+// --- Poll state ---
+async function pollState() {
+  try {
+    const res = await fetch('/api/square/state');
+    const data = await res.json();
+    playersData = data.players;
+
+    // Process chat for bubbles
+    for (const msg of data.chat) {
+      if (msg.id > lastChatId) {
+        lastChatId = msg.id;
+        // Show bubble
+        if (bubbles[msg.u] && bubbles[msg.u].timer) clearTimeout(bubbles[msg.u].timer);
+        bubbles[msg.u] = {
+          msg: msg.m,
+          timer: setTimeout(() => { delete bubbles[msg.u]; }, 6000)
+        };
+      }
+    }
+    renderPlayers();
+  } catch (e) {}
+}
+
+// --- Chat send ---
+chatSend.addEventListener('click', sendChat);
+chatInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') sendChat(); });
+
+async function sendChat() {
+  const msg = chatInput.value.trim();
+  if (!msg) return;
+  chatInput.value = '';
+  try {
+    await fetch('/api/square/chat', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({name: myName, m: msg})
+    });
+    // Immediately show own bubble
+    if (bubbles[myName] && bubbles[myName].timer) clearTimeout(bubbles[myName].timer);
+    bubbles[myName] = {
+      msg: msg,
+      timer: setTimeout(() => { delete bubbles[myName]; }, 6000)
+    };
+    renderPlayers();
+  } catch (e) {}
+}
+
+// --- Game loop ---
+function startGameLoop() {
+  updateCamera();
+  pollState();
+  setInterval(pollState, 3000);
+  setInterval(sendHeartbeat, 10000); // heartbeat to stay visible
+
+  function frame() {
+    walkStep();
+    interpolateOthers();
+    renderPlayers();
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+}
+
+// --- Viewport resize ---
+function fitViewport() {
+  const vv = window.visualViewport;
+  if (!vv) return;
+  document.body.style.height = vv.height + 'px';
+  document.body.style.top = vv.offsetTop + 'px';
+}
+if (window.visualViewport) {
+  window.visualViewport.addEventListener('resize', fitViewport);
+  window.visualViewport.addEventListener('scroll', fitViewport);
+  fitViewport();
+}
+</script>
+</body>
+</html>

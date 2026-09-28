@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>PevaPub :: Info</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: monospace;
+      background: linear-gradient(160deg, #1f1d2e 0%, #191724 40%, #26233a 100%);
+      background-attachment: fixed;
+      color: #e0def4;
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      inset: 0;
+      padding: 12px;
+      gap: 10px;
+      overflow: hidden;
+    }
+
+    #topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    h1 {
+      font-size: 0.85rem;
+      color: rgba(224,222,244,0.6);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    nav {
+      display: flex;
+      gap: 4px;
+    }
+
+    nav a {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 44px;
+      height: 44px;
+      border-radius: 8px;
+      font-size: 1.1rem;
+      text-decoration: none;
+      background: rgba(224,222,244,0.08);
+      border: 1px solid rgba(224,222,244,0.25);
+      transition: background 0.15s;
+      line-height: 1;
+    }
+
+    nav a:hover {
+      background: rgba(224,222,244,0.28);
+    }
+
+    nav a.disabled {
+      opacity: 0.35;
+      filter: grayscale(1) saturate(0.4) hue-rotate(190deg);
+      pointer-events: none;
+      cursor: default;
+    }
+
+    #content {
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      padding: 16px 18px;
+      background: rgba(224,222,244,0.04);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(224,222,244,0.08);
+      border-radius: 16px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.12), inset 0 1px 0 rgba(224,222,244,0.2);
+      font-size: 0.88rem;
+      line-height: 1.65;
+    }
+
+    #content h2 {
+      font-size: 0.8rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: rgba(224,222,244,0.55);
+      margin-bottom: -6px;
+    }
+
+    #content p {
+      color: rgba(224,222,244,0.9);
+    }
+
+    #content strong {
+      color: #e0def4;
+    }
+  </style>
+</head>
+<body>
+  <div id="topbar">
+    <h1>PevaPub :: Info</h1>
+    <nav>
+      <a href="/" title="Home">🏠</a>
+      <a href="/info.html" class="disabled" title="Info">ℹ️</a>
+      <a href="/square.html" title="Square">🌳</a>
+      <a href="/shogi.html" title="Games">♟️</a>
+    </nav>
+  </div>
+
+  <div id="content">
+    <h2>What is this?</h2>
+    <p>
+      You are connected to <strong>PevaPub</strong>, a tiny wireless server running on a
+      <strong>Raspberry Pi Pico W2</strong>, a microcontroller roughly the size of a stick of gum.
+      There is no internet here. The Pico itself <em>is</em> the internet, for as long as you are
+      connected to its WiFi network.
+    </p>
+
+    <h2>What can it do?</h2>
+    <p>
+      It hosts a small <strong>chat room</strong> where everyone on the same WiFi can
+      send short messages to each other. There is a <strong>shogi board</strong>
+      (Japanese chess) you can play against other people connected to the same network.
+      And there is <strong>the square</strong>, a little pixel-art town square where you
+      can pick a character, walk around, and chat with others through speech bubbles.
+    </p>
+
+    <h2>Please be gentle</h2>
+    <p>
+      The hardware is about as minimal as it gets: a dual-core processor running at 150 MHz with
+      520 KB of RAM. It is <strong>very easy to overwhelm</strong>. Too many requests at once, a
+      large file, or a burst of messages can slow it to a crawl or crash it entirely.
+    </p>
+    <p>
+      On top of that, everything runs over <strong>open, unencrypted WiFi and plain HTTP</strong>.
+      There are no passwords, no TLS, no privacy. Anyone nearby can see what you send.
+    </p>
+
+    <h2>The spirit of the thing</h2>
+    <p>
+      This is a small, fragile, handmade thing. Please <strong>be kind to each other</strong> and
+      treat the server with care. Use it for what it is (a bit of fun) and resist any
+      urge to push its limits or break things. The more gently everyone uses it, the better the
+      experience for everyone.
+    </p>
+    <p>
+      Have fun!
+    </p>
+  </div>
+
+  <script>
+    // --- Resize to visual viewport (keeps layout above keyboard) ---
+    function fitViewport() {
+      const vv = window.visualViewport;
+      if (!vv) return;
+      document.body.style.height = vv.height + 'px';
+      document.body.style.top    = vv.offsetTop + 'px';
+    }
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', fitViewport);
+      window.visualViewport.addEventListener('scroll', fitViewport);
+      fitViewport();
+    }
+  </script>
+</body>
+</html>

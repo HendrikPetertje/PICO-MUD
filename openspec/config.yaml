@@ -1,0 +1,27 @@
+schema: spec-driven
+
+# Project context (optional)
+# This is shown to AI when creating artifacts.
+# Add your tech stack, conventions, style guides, domain knowledge, etc.
+# Example:
+context: |
+  Tech stack: Microphython
+  the contents of ./target in the main repo dir will be running on the root of a raspberry pi pico W (v2)
+  The target of the project is outlined in ./openspec/PROJECT_OUTLINE.md
+  A demo project (of a comparable project) that includes a WIFI hotspot, event loop and HTTP server is outlined in ./openspec/reference-project/
+
+  rules:
+    proposal:
+      - Aside from the Proposal, the design, tasks and specs there should also be a "documentation" folder created with each proposal. this documentation folder should include downloaded documentation, reference materials and information that would be of value during implementation.
+
+# Per-operation guidance (optional)
+# Add advisory guidance for how apply and archive work should be conducted.
+# This is separate from artifact rules above.
+# Example:
+operations:
+  apply:
+    guidance:
+      - Aside from the regular folder structure including a proposal, design, tasks and specs there is also a "documentation" folder which each proposal that should be applied. this folder will include crucial information and reference material that can be used to streamline the implementation.
+#     archive:
+#       guidance:
+#         - Summarize the archive outcome before finishing

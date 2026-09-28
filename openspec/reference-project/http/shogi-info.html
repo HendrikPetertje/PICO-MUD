@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>PevaPub :: Shogi Rules</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: monospace;
+      background: linear-gradient(160deg, #1f1d2e 0%, #191724 40%, #26233a 100%);
+      background-attachment: fixed;
+      color: #e0def4;
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      inset: 0;
+      padding: 12px;
+      gap: 10px;
+      overflow: hidden;
+    }
+
+    #topbar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .back-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 44px;
+      height: 44px;
+      border-radius: 8px;
+      font-size: 1.1rem;
+      text-decoration: none;
+      background: rgba(224,222,244,0.08);
+      border: 1px solid rgba(224,222,244,0.25);
+      transition: background 0.15s;
+      color: #e0def4;
+      line-height: 1;
+      flex-shrink: 0;
+    }
+
+    .back-btn:hover { background: rgba(224,222,244,0.28); }
+
+    h1 {
+      font-size: 0.85rem;
+      color: rgba(224,222,244,0.6);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    #content {
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      padding: 16px 18px;
+      background: rgba(224,222,244,0.04);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(224,222,244,0.08);
+      border-radius: 16px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.12), inset 0 1px 0 rgba(224,222,244,0.2);
+      font-size: 0.88rem;
+      line-height: 1.65;
+    }
+
+    #content h2 {
+      font-size: 0.8rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: rgba(224,222,244,0.55);
+      margin-bottom: -6px;
+    }
+
+    #content p {
+      color: rgba(224,222,244,0.9);
+    }
+
+    #content strong {
+      color: #e0def4;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.82rem;
+    }
+
+    th, td {
+      padding: 5px 8px;
+      border: 1px solid rgba(224,222,244,0.2);
+      text-align: left;
+    }
+
+    th {
+      background: rgba(224,222,244,0.1);
+      color: rgba(224,222,244,0.6);
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    td {
+      color: rgba(224,222,244,0.85);
+    }
+
+    .piece-symbol {
+      font-size: 1.1rem;
+    }
+
+    .promoted-color {
+      color: #f6c177;
+    }
+  </style>
+</head>
+<body>
+  <div id="topbar">
+    <a href="/info.html" class="back-btn" title="Back to info">&larr;</a>
+    <h1>PevaPub :: Shogi Rules</h1>
+  </div>
+
+  <div id="content">
+    <h2>What is shogi?</h2>
+    <p>
+      Shogi is Japanese chess, played on a 9x9 board. Each player starts with 20 pieces.
+      The goal is to capture your opponent's King. The biggest difference from Western chess:
+      when you capture a piece, it becomes yours and you can drop it back onto the board on
+      a later turn.
+    </p>
+
+    <h2>The pieces</h2>
+    <p>
+      On this server, shogi pieces are shown as chess symbols. Your pieces face up,
+      your opponent's pieces are rotated upside-down. Here's what each one does:
+    </p>
+
+    <table>
+      <tr><th>Symbol</th><th>Piece</th><th>Movement</th></tr>
+      <tr>
+        <td><span class="piece-symbol">♔</span></td>
+        <td><strong>King</strong></td>
+        <td>One step in any direction</td>
+      </tr>
+      <tr>
+        <td><span class="piece-symbol" style="color:#d4a017;">♕</span></td>
+        <td><strong>Gold General</strong></td>
+        <td>One step in any direction except diagonally backward</td>
+      </tr>
+      <tr>
+        <td><span class="piece-symbol">♕</span></td>
+        <td><strong>Silver General</strong></td>
+        <td>One step forward (any of 3 squares) or diagonally backward</td>
+      </tr>
+      <tr>
+        <td><span class="piece-symbol">♞</span></td>
+        <td><strong>Knight</strong></td>
+        <td>Jumps two forward and one to the side (like chess, but forward only)</td>
+      </tr>
+      <tr>
+        <td><span class="piece-symbol">♖</span></td>
+        <td><strong>Rook</strong></td>
+        <td>Any distance in a straight line (up, down, left, right)</td>
+      </tr>
+      <tr>
+        <td><span class="piece-symbol">♗</span></td>
+        <td><strong>Bishop</strong></td>
+        <td>Any distance diagonally</td>
+      </tr>
+      <tr>
+        <td><span class="piece-symbol">♙</span></td>
+        <td><strong>Lance</strong></td>
+        <td>Any distance straight forward (cannot retreat)</td>
+      </tr>
+      <tr>
+        <td><span class="piece-symbol">♟</span></td>
+        <td><strong>Pawn</strong></td>
+        <td>One step straight forward</td>
+      </tr>
+    </table>
+
+    <h2>Promotion</h2>
+    <p>
+      When a piece reaches the far three rows of the board (your opponent's territory),
+      it can be <strong>promoted</strong>. Promoted pieces turn
+      <span class="promoted-color">gold</span> on the board.
+    </p>
+    <p>
+      Most pieces promote to Gold General movement. The exceptions:
+    </p>
+    <table>
+      <tr><th>Piece</th><th>Promotes to</th></tr>
+      <tr><td>Rook</td><td><strong>Dragon King</strong> (rook + one step diagonal)</td></tr>
+      <tr><td>Bishop</td><td><strong>Dragon Horse</strong> (bishop + one step orthogonal)</td></tr>
+      <tr><td>Silver, Knight, Lance, Pawn</td><td>Move like a Gold General</td></tr>
+    </table>
+    <p>
+      Promotion is mandatory if a piece would have no legal move without it
+      (pawn or lance on the last row, knight on the last two rows).
+    </p>
+
+    <h2>Drops</h2>
+    <p>
+      When you capture an enemy piece, it goes into your hand (shown at the bottom of the screen).
+      On any turn, instead of moving a piece on the board, you can <strong>drop</strong> a captured
+      piece onto any empty square. Dropped pieces always return as their unpromoted form.
+    </p>
+    <p>
+      Drop restrictions:
+    </p>
+    <p>
+      &bull; You cannot drop a pawn in a column that already has one of your unpromoted pawns.<br>
+      &bull; You cannot drop a piece where it would have no legal move (pawn/lance on last row,
+      knight on last two rows).
+    </p>
+
+    <h2>Winning</h2>
+    <p>
+      Capture your opponent's King to win. There is no checkmate announcement on this server;
+      if a King can be taken, it gets taken and the game ends.
+    </p>
+
+    <h2>How to play on this server</h2>
+    <p>
+      &bull; Go to the games page and enter your name.<br>
+      &bull; Create a new game or click an existing game to join it.<br>
+      &bull; Tap one of your pieces to see where it can move (highlighted squares).<br>
+      &bull; Tap a highlighted square to move there.<br>
+      &bull; To drop a captured piece, tap it in your hand (bottom bar), then tap an empty square.<br>
+      &bull; If you don't play for 5 minutes, the game is forfeited.
+    </p>
+  </div>
+
+  <script>
+    function fitViewport() {
+      const vv = window.visualViewport;
+      if (!vv) return;
+      document.body.style.height = vv.height + 'px';
+      document.body.style.top = vv.offsetTop + 'px';
+    }
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', fitViewport);
+      window.visualViewport.addEventListener('scroll', fitViewport);
+      fitViewport();
+    }
+  </script>
+</body>
+</html>

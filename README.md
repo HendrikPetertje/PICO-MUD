@@ -44,7 +44,7 @@ Use `/connect admin changeme` for the default administrator, or `/connect guest`
 
 ## Commands
 
-Every command begins with `/` and is case-insensitive. Plain text is sent to the current room as `/say`; `"text` and `:text` are shortcuts for saying and emoting. Use `/help` to list all commands, or `/help <command>` for detailed help.
+Every command begins with `/` and is case-insensitive. Plain text is sent to the current room as `/say`; `"text` and `:text` are shortcuts for saying and emoting. Use `/help` to list all commands, `/help <command>` for detailed help, or `/help tutorial` for a guided introduction.
 
 | Command | Description |
 | --- | --- |
@@ -62,7 +62,7 @@ Every command begins with `/` and is case-insensitive. Plain text is sent to the
 | `/mail send <user> <title> = <message>` | Send mail to a registered user. |
 | `/dig <direction> <room name>` | Create a connected room you own. |
 | `/create <item name>` | Create an item in a room you own. |
-| `/creature <item> [on|off]` | Classify an item as a creature. |
+| `/creature <item> [on\|off]` | Classify an item as a creature. |
 | `/habbit add <item> <seconds> <name>` | Add timed activity to an item or creature. |
 | `/habbit edit <item> <id> <field> <value>` | Edit a habbit's interval, name, chat, or emote. |
 | `/habbits <item>` | List an item's timed activity. |
@@ -70,3 +70,39 @@ Every command begins with `/` and is case-insensitive. Plain text is sent to the
 | `/user create <name> <password>` | Create a user. Administrator only. |
 | `/save` | Save changed world data immediately. Administrator only. |
 | `/quit` | Disconnect from the MUD. |
+
+### Moving Around
+
+Guests and registered players can explore public rooms with `/go north` or the
+short form `/n`. Use `/join <player>` to visit an online player when their room
+is accessible. `/teleport to <room_id>` goes directly to a known room, while
+`/teleport global home` returns to room 1. Registered players can use `/home`
+to return to their own home room; guests do not have a personal home.
+
+### Building And Exploring Rooms
+
+Registered players can build only in rooms they own. Start with `/dig north
+"green garden"` to create a connected room, then use `/n` to enter it. Give the
+room a useful name and description with `/rename here "The Green Garden"` and
+`/describe here A quiet place to rest.`. The opposite exit is created with the
+new room, so `/s` returns to the original room.
+
+### Creating Items And Actions
+
+In a room you own, create scenery with `/create "brass lever"`. Add an action
+that only shows a message with `/interaction add "brass lever" pull The floor
+creaks.`; any visitor can then use `/pull "brass lever"`. Add a separate portal
+action with `/interaction add "brass lever" enter You step through the gate.`,
+then set its destination with `/interaction teleport "brass lever" enter
+<room_id>`. Item teleportation can target one of your rooms or another owner's
+public room, which lets portal items connect two public properties. It cannot
+target another owner's private room.
+
+### Creating Creatures And Habbits
+
+Creatures are items with a special room display and the same actions as ordinary
+items. Create an item, then mark it with `/creature "garden sprite" on`; visitors
+can still use its interactions. Give it timed behavior with `/habbit add "garden
+sprite" 30 hum`, then configure output with `/habbit edit "garden sprite" 1
+emote on hums softly.`. Use `/habbits "garden sprite"` to review its activity.
+Habbits run only while at least one player is in the room.

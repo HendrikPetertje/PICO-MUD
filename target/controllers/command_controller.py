@@ -30,6 +30,8 @@ class CommandController:
 
     def help(self, session, args):
         topic = args.pop(True); args.end()
+        if topic and topic.lstrip('/').lower() == "tutorial":
+            return game_view.tutorial()
         entries = COMMANDS
         if topic:
             entry = REGISTRY.get(topic.lstrip('/').lower())
@@ -42,7 +44,7 @@ class CommandController:
         for entry in entries:
             if self.allowed(session, entry[2]):
                 yield from game_view.help_entry(entry, detailed)
-        yield 'Quote multiword targets. Plain text or leading " speaks; leading : emotes.\n'
+        yield 'Quote multiword targets. Plain text or leading " speaks; leading : emotes.\n\n'
 
     def dispatch(self, session, line):
         if not line.startswith('/'):
@@ -103,6 +105,7 @@ class CommandController:
     def welcome(self, session):
         yield self.world.config.WELCOME_TEXT.rstrip('\n') + "\n"
         yield "Use /look, /go north or /n; /teleport to <id>; /teleport global home returns to room 1.\n"
+        yield "Use /help tutorial for a guided introduction.\n"
         if session.user_id:
             yield "Use /home for your personal room, /help for commands.\n"
         yield from self.rooms.view(session)

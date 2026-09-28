@@ -94,3 +94,28 @@ def help_entry(entry, detailed=False):
         if aliases:
             yield "Aliases: " + aliases + "\n"
         yield description + "\n"
+
+
+def tutorial():
+    yield "PICO MUD tutorial\n\n"
+    yield "Moving\n"
+    yield "Guests and users can explore public rooms with /go north or /n. "
+    yield "Use /join <player> to visit an online player when their room is accessible. "
+    yield "Use /teleport to <room_id> for a known room, or /teleport global home to return to room 1. "
+    yield "Registered users can also use /home for their own home room.\n\n"
+    yield "Building rooms\n"
+    yield "Registered users can build only in rooms they own. Create a connected room with "
+    yield '/dig north "green garden", then enter it with /n. Name and describe the new room '
+    yield 'with /rename here "The Green Garden" and /describe here A quiet place to rest.\n\n'
+    yield "Items and actions\n"
+    yield "In a room you own, create scenery with /create \"brass lever\". Add a message-only "
+    yield 'action with /interaction add "brass lever" pull The floor creaks. Visitors can use it '
+    yield 'with /pull "brass lever". Add a separate portal action with /interaction add "brass lever" enter '
+    yield 'You step through the gate, then /interaction teleport "brass lever" enter <room_id>. '
+    yield "A portal may target your own room or another owner's public room, but not their private room.\n\n"
+    yield "Creatures and habbits\n"
+    yield "Items can become creatures: create one, then run /creature \"garden sprite\" on. "
+    yield "Creatures keep the same item interactions. "
+    yield 'Give it timed activity with /habbit add "garden sprite" 30 hum, then configure output '
+    yield 'with /habbit edit "garden sprite" 1 emote on hums softly. Use /habbits "garden sprite" '
+    yield "to review its activity. Habbits run only while players are in the room.\n"

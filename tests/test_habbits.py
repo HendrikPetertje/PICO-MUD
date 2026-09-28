@@ -111,6 +111,27 @@ class HabbitsTest(unittest.TestCase):
         self.assertIn("Items:\n  sign [1]\n", lines)
         self.assertIn("Creatures:\n  owl [2]\n", lines)
 
+    def test_room_view_hides_empty_sections(self):
+        world = type("World", (), {"items": self.items, "rooms": self.rooms})()
+        lines = "".join(RoomController(world, Sessions([]), Notifications()).view(Viewer()))
+        self.assertNotIn("Exits:\n", lines)
+        self.assertNotIn("Items:\n", lines)
+        self.assertNotIn("Creatures:\n", lines)
+        self.assertIn("Here: \n\n", lines)
+
+    def test_item_view_hides_empty_actions(self):
+        item_id = self.items.create(1, "sign")
+        world = type("World", (), {"items": self.items, "rooms": self.rooms})()
+        controller = RoomController(world, Sessions([]), Notifications())
+        item = self.items.get(1, item_id)
+        self.assertNotIn("Actions:\n", "".join(controller.item_view(Viewer(), item)))
+        detailed = "".join(controller.item_view(Viewer(), item, True))
+        self.assertIn("Item 1 in room 1, owner 1\n", detailed)
+        self.assertNotIn("Actions:\n", detailed)
+        self.items.interaction(1, item_id, "add", "read", "The sign is faded.")
+        lines = "".join(controller.item_view(Viewer(), self.items.get(1, item_id)))
+        self.assertIn("Actions:\n  read\n", lines)
+
     def test_habbit_command_forms_and_listing(self):
         item_id = self.items.create(1, "owl")
         world = type("World", (), {"items": self.items, "rooms": self.rooms})()

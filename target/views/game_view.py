@@ -39,7 +39,7 @@ def room_item_line(item):
 
 
 def action_entry(action, detailed=False):
-    result = action["action"]
+    result = "  " + action["action"]
     if detailed:
         result += ": " + action["flavor_text"]
         if "teleport_to_room_id" in action:

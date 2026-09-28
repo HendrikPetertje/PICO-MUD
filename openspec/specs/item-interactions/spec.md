@@ -46,7 +46,13 @@ only assign accessible targets: their own rooms or other owners' public rooms.
 when present, attempt a validated teleport of that actor. It SHALL never modify
 the item or run code. `/use <item>` SHALL run its single action, list choices
 when there are multiple actions, or explain when no actions exist.
-`/look at <item>` SHALL list available action names. Guests SHALL interact.
+`/look at <item>` SHALL list available action names when the item has actions
+and SHALL omit the `Actions:` heading when it has none. Guests SHALL interact.
+
+#### Scenario: Item with no actions
+- **WHEN** a player looks at or examines an item with no interactions
+- **THEN** its name and description are displayed without an empty `Actions:`
+  heading
 
 #### Scenario: Cross-property portal
 - **WHEN** a guest uses an item targeting another user's public room

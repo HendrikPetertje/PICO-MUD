@@ -18,14 +18,17 @@ class RoomController:
         room_id = session.room_id
         room = self.rooms.get(room_id)
         yield from game_view.room_header(room)
-        yield "Exits:\n"
+        exits = []
         for way in DIRECTIONS:
             room = self.rooms.get(room_id)
             require(session.can_enter(room) and session.room_id == room_id, "Room view changed; look again.")
             if way in room["exits"]:
-                yield game_view.exit_line(way, room["exits"][way])
+                exits.append(game_view.exit_line(way, room["exits"][way]))
+        if exits:
+            yield "Exits:\n"
+            yield from exits
         for label, creature in (("Items", False), ("Creatures", True)):
-            yield label + ":\n"
+            entries = []
             for item_id in [i["id"] for i in self.rooms.get(room_id)["items"]]:
                 room = self.rooms.get(room_id)
                 require(session.can_enter(room) and session.room_id == room_id, "Room view changed; look again.")
@@ -34,7 +37,10 @@ class RoomController:
                 except GameError:
                     continue
                 if bool(item.get("creature")) == creature:
-                    yield game_view.room_item_line(item)
+                    entries.append(game_view.room_item_line(item))
+            if entries:
+                yield label + ":\n"
+                yield from entries
         yield "Here: " + ", ".join(s.name() for s in self.sessions.live() if s.room_id == room_id) + "\n\n"
 
     def move(self, session, destination_id, way=None):
@@ -194,9 +200,10 @@ class RoomController:
         yield item["description"] + "\n"
         if detailed:
             yield "Item {} in room {}, owner {}\n".format(item["id"], session.room_id, self.rooms.get(session.room_id)["owner_id"])
-        yield "Actions:\n"
-        for action in item["interactions"]:
-            yield game_view.action_entry(action, detailed and session.can_edit(self.rooms.get(session.room_id)))
+        if item["interactions"]:
+            yield "Actions:\n"
+            for action in item["interactions"]:
+                yield game_view.action_entry(action, detailed and session.can_edit(self.rooms.get(session.room_id)))
 
     def who(self, viewer):
         for player in self.sessions.live():

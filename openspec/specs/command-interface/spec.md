@@ -62,6 +62,8 @@ be restricted to the owner/admin.
 - **THEN** they see room name, description, exits, items and players, then a prompt
 - **AND** a blank line precedes the room name and follows the player list;
   login, movement and teleports use the same spacing
+- **AND** each item is shown as an indented local item name followed by its
+  bracketed local id, without repeating the room id
 
 ### Requirement: Bounded complete presentation
 Views SHALL render plain UTF-8 text with no ANSI or cursor control. Commands

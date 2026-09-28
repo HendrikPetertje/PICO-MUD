@@ -34,6 +34,10 @@ def item_entry(room_id, item):
     return "Room " + str(room_id) + ", item " + str(item["id"]) + ": " + item["name"] + "\n"
 
 
+def room_item_line(item):
+    return "  " + item["name"] + " [" + str(item["id"]) + "]\n"
+
+
 def action_entry(action, detailed=False):
     result = action["action"]
     if detailed:

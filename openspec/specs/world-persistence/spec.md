@@ -57,7 +57,7 @@ Stale temporary files SHALL NOT replace an existing valid primary file.
 ### Requirement: Dirty periodic persistence
 Successful persistent mutations SHALL mark the affected model dirty. Reads,
 failed validation and unchanged assignments SHALL NOT cause writes. Every
-SAVE_INTERVAL seconds (default 30), controller scheduling SHALL ask each dirty
+SAVE_INTERVAL seconds (default 60), controller scheduling SHALL ask each dirty
 file owner to save. `/save` SHALL request the same check immediately. Serialization
 SHALL stream to a temporary file and replace the primary only after successful
 close; flags SHALL clear only on success. A failed file SHALL remain dirty for

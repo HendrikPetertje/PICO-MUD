@@ -32,7 +32,7 @@ class RoomController:
                 item = self.world.items.get(room_id, item_id)
             except GameError:
                 continue
-            yield game_view.item_entry(room_id, item)
+            yield game_view.room_item_line(item)
         yield "Here: " + ", ".join(s.name() for s in self.sessions.live() if s.room_id == room_id) + "\n\n"
 
     def move(self, session, destination_id, way=None):

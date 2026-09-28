@@ -15,7 +15,7 @@ state in configuration.
 The file SHALL define at least the following settings with these defaults:
 `AP_SSID` ("PICO MUD"), `AP_PASSWORD` ("MultiUserDungeon"), `TELNET_PORT`
 (8888), `MAX_CLIENTS` (6), `IDLE_TIMEOUT` (900 seconds), `ADMIN_NAME`,
-`ADMIN_PASSWORD`, `PASSWORD_SALT`, `WELCOME_TEXT`, `SAVE_INTERVAL` (30),
+`ADMIN_PASSWORD`, `PASSWORD_SALT`, `WELCOME_TEXT`, `SAVE_INTERVAL` (60),
 `MAX_USERS` (15), `MAX_ROOMS_PER_USER` (10), `MAX_ITEMS_PER_ROOM` (5),
 `MAX_INTERACTIONS_PER_ITEM` (2), `MAX_NAME_LENGTH` (60), `MAX_TEXT_LENGTH`
 (250), `MAX_MAILS` (10) and `MIN_FREE_MEMORY` (32768 bytes).

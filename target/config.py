@@ -13,7 +13,7 @@ MAX_CLIENTS = 6
 IDLE_TIMEOUT = 900  # seconds
 WELCOME_TEXT = "Welcome to PICO MUD!\nExplore, build and meet other players. Type /help for commands."
 
-SAVE_INTERVAL = 30  # seconds between dirty-model saves
+SAVE_INTERVAL = 60  # seconds between dirty-model saves
 MAX_USERS = 15
 MAX_ROOMS_PER_USER = 10
 MAX_ITEMS_PER_ROOM = 5

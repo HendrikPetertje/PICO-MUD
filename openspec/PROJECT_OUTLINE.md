@@ -114,7 +114,7 @@ All configuration lives in `/config.py` (`/target/config.py` in this repo):
 | `ADMIN_PASSWORD` | `"changeme"` | Password of the initial admin |
 | `PASSWORD_SALT` | `"..."` | Shared salt used for hashing all passwords |
 | `WELCOME_TEXT` | `"..."` | Text shown after logging in (user or guest) |
-| `SAVE_INTERVAL` | `30` | Seconds between checks whether the state must be saved |
+| `SAVE_INTERVAL` | `60` | Seconds between checks whether the state must be saved |
 | `MAX_USERS` | `15` | Maximum number of users, including the admin |
 | `MAX_ROOMS_PER_USER` | `10` | Maximum rooms a user owns, including the home room |
 | `MAX_ITEMS_PER_ROOM` | `5` | Maximum items in a single room |
@@ -317,7 +317,7 @@ The users, rooms and mail models each own their file's dirty flag. The items
 model changes the rooms model's nested items and marks that shared rooms flag
 dirty. Reading data or changing online presence does not mark any file dirty.
 
-Every `SAVE_INTERVAL` seconds (default 30), an application controller invokes
+Every `SAVE_INTERVAL` seconds (default 60), an application controller invokes
 the models' save-if-dirty operations from an event-loop tick. `/save` invokes
 the same operations immediately. Models own serialization and clear their
 flag only after a successful save. The telnet module only supplies the tick;
@@ -589,4 +589,4 @@ To play, join **PICO MUD** with the configured `AP_PASSWORD` (default
 shows the seven-line PICO MUD block-art banner and connection instructions.
 Use `/connect admin changeme` for the initial admin or `/connect guest` to
 explore; `/connect <name>` prompts for a password. `/help` describes the game
-commands. Changes save every 30 seconds or immediately with admin `/save`.
+commands. Changes save every 60 seconds or immediately with admin `/save`.

@@ -437,7 +437,7 @@ Permission levels:
 | `/connect guest` | `connect guest` | G | Continue as an anonymous guest (`guest-1`, `guest-2`, ...). |
 | `/quit` | `@quit` | G | Disconnect from the MUD. |
 | `/password <old> <new>` | `@password` | U | Change your own password. |
-| `/help [command]` | `help` | G | Show focused help. Topics: `tutorial`, `user`, `movement`, `building`, and `programming` (interactions, habbits, and variables). Admins also see `admin` for world management. |
+| `/help [command]` | `help` | G | Show focused help. Topics: `tutorial`, `user`, `movement`, `building`, and `programming` (interactions, habits, and variables). Admins also see `admin` for world management. |
 | `/who` | `@who` / `who` | G | List connected players and the room each one is in. |
 | `/whoami` | `@whoami`-style | G | Show your name, user id, admin status and home room. |
 
@@ -526,8 +526,8 @@ reserved, and creating an interaction with a reserved action name is refused.
 | `/interaction set <item> <action> <variable> <value>` | - | O | Set an interaction variable effect. |
 | `/interaction clear <item> <action>` | - | O | Clear an interaction variable effect. |
 | `/interactions <item>` | `@verbs` | G | List an item's actions. The owner also sees flavor texts and targets. |
-| `/habbit set <item> <id> <variable> <value>` | - | O | Set a cron job variable effect. |
-| `/habbit clear <item> <id>` | - | O | Clear a cron job variable effect. |
+| `/habit set <item> <id> <variable> <value>` | - | O | Set a cron job variable effect. |
+| `/habit clear <item> <id>` | - | O | Clear a cron job variable effect. |
 | `/move <item> to <room_id>` | `@move` | O | Move one of your items to another room you own. The item is removed and re-created in the target room with a new id. |
 | `/destroy <item>` | `@recycle` | O | Delete one of your items. |
 

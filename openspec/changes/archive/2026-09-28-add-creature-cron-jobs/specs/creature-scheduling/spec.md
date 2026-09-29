@@ -25,11 +25,11 @@ When a due cron job has an `emote`, the system SHALL send it to the item's room 
 - **THEN** occupants receive the item emote before the item chat message
 
 ### Requirement: Cron job management
-Owners and admins permitted to edit the current room SHALL manage the current room's item or creature cron jobs with `/habbit add <item> <interval-seconds> <name>`, `/habbit edit <item> <cron-id> interval <seconds>`, `/habbit edit <item> <cron-id> name <name>`, `/habbit edit <item> <cron-id> <chat|emote> <on|off> [text]`, `/habbit remove <item> <cron-id>`, and `/habbits <item>`. Additions and changes SHALL enforce configured name and text limits, reject non-positive intervals and unknown cron ids, and preserve the item on failed validation. Turning chat or emote off SHALL clear the selected optional output; turning it on SHALL require text.
+Owners and admins permitted to edit the current room SHALL manage the current room's item or creature cron jobs with `/habit add <item> <interval-seconds> <name>`, `/habit edit <item> <cron-id> interval <seconds>`, `/habit edit <item> <cron-id> name <name>`, `/habit edit <item> <cron-id> <chat|emote> <on|off> [text]`, `/habit remove <item> <cron-id>`, and `/habits <item>`. Additions and changes SHALL enforce configured name and text limits, reject non-positive intervals and unknown cron ids, and preserve the item on failed validation. Turning chat or emote off SHALL clear the selected optional output; turning it on SHALL require text.
 
 #### Scenario: Owner configures and inspects a job
 - **WHEN** an owner adds a cron job to an item and configures its emote and chat output
-- **THEN** `/habbits <item>` lists its id, name, interval, and configured output values
+- **THEN** `/habits <item>` lists its id, name, interval, and configured output values
 
 #### Scenario: Fourth job is rejected
 - **WHEN** a builder adds a fourth cron job to an item that already has three

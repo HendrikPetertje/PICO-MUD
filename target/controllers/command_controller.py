@@ -38,7 +38,7 @@ class CommandController:
                          "teleport", "home", "join"),
             "building": ("dig", "undig", "rename", "describe", "private", "sethome", "destroy",
                           "message", "lock", "unlock", "create", "creature", "item", "move"),
-            "programming": ("interaction", "interactions", "habbit", "habbits", "room-unlock-rules", "item"),
+            "programming": ("interaction", "interactions", "habit", "habits", "room-unlock-rules", "item"),
             "admin": ("shout", "user", "users", "boot", "save", "uptime"),
         }
         if topic in focused:
@@ -111,9 +111,9 @@ class CommandController:
             return self.rooms.build(session, verb, args)
         if verb == "destroy" and args.remaining().lower().startswith("room "):
             return self.rooms.build(session, verb, args)
-        if verb in ("create", "destroy", "move", "interaction", "creature", "habbit", "item"):
+        if verb in ("create", "destroy", "move", "interaction", "creature", "habit", "item"):
             return self.items.edit(session, verb, args)
-        if verb in ("use", "interactions", "habbits"):
+        if verb in ("use", "interactions", "habits"):
             return self.items.use(session, verb, args)
         if verb in ("say", "emote", "whisper", "page", "shout"):
             return self.communication.handle(session, verb, args)

@@ -49,8 +49,8 @@
   add|remove <variable> <condition> <value>` and `/interaction require <item>
   <action> clear`. Interaction effects use `/interaction set <item> <action>
   <variable> <value>` and `/interaction clear <item> <action>`.
-- Cron effects use `/habbit set <item> <cron-id> <variable> <value>` and
-  `/habbit clear <item> <cron-id>`. Variable names are unquoted identifiers. A
+- Cron effects use `/habit set <item> <cron-id> <variable> <value>` and
+  `/habit clear <item> <cron-id>`. Variable names are unquoted identifiers. A
   quoted value is always a string, including numeric-looking values such as
   `"01"`; an unquoted integer is numeric.
 

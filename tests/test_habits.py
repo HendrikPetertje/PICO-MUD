@@ -7,7 +7,7 @@ import unittest
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "target"))
 
 import config
-from controllers.habbit_controller import HabbitController
+from controllers.habit_controller import HabitController
 from controllers.item_controller import ItemController
 from controllers.room_controller import RoomController
 from controllers.command_controller import CommandController
@@ -103,7 +103,7 @@ class Player(Editor):
         return self.properties.allowed(self, room["owner_id"], room["unlocked_if"])
 
 
-class HabbitsTest(unittest.TestCase):
+class HabitsTest(unittest.TestCase):
     def setUp(self):
         self.directory = tempfile.TemporaryDirectory()
         self.rooms = Rooms(self.directory.name + "/rooms.json", TestConfig)
@@ -128,8 +128,8 @@ class HabbitsTest(unittest.TestCase):
 
     def test_commands_and_configuration_are_registered(self):
         self.assertEqual(REGISTRY["creature"][2], "O")
-        self.assertEqual(REGISTRY["habbit"][2], "O")
-        self.assertEqual(REGISTRY["habbits"][2], "G")
+        self.assertEqual(REGISTRY["habit"][2], "O")
+        self.assertEqual(REGISTRY["habits"][2], "G")
         valid = type("Config", (), {name: getattr(config, name) for name in dir(config) if name.isupper()})
         validate(valid)
         valid.MAX_CRON_JOBS_PER_ITEM = 0
@@ -144,7 +144,7 @@ class HabbitsTest(unittest.TestCase):
                          "  /help user - Meet people, manage your account, and send messages.\n"
                          "  /help movement - Travel by exits, teleport, visit homes, and join players.\n"
                          "  /help building - Shape rooms, exits, descriptions, and scenery.\n"
-                         "  /help programming - Give items and creatures actions, habbits, and variables.\n")
+                          "  /help programming - Give items and creatures actions, habits, and variables.\n")
         programming = "".join(game_view.help_topic("programming"))
         self.assertIn("Variables remember small things", programming)
         self.assertIn('values that look like numbers, such as "01"', programming)
@@ -160,7 +160,7 @@ class HabbitsTest(unittest.TestCase):
             "tutorial": ("Getting started", "/connect <name> [password] | guest", "  Aliases: Login"),
             "user": ("Users and players", "/who", "/look [at <item|direction|player>]"),
             "movement": ("Movement", "/go <direction>", "/teleport [to] home | [to] global home | to <room_id>"),
-            "programming": ("Programming rooms", "/interactions <item>", "/habbits <item>"),
+            "programming": ("Programming rooms", "/interactions <item>", "/habits <item>"),
         }
         for topic, values in expected.items():
             lines = "".join(controller.help(guest, Arguments(topic)))
@@ -182,6 +182,10 @@ class HabbitsTest(unittest.TestCase):
         entry = REGISTRY["save"]
         self.assertIn("/save [A]\n", "".join(game_view.help_entry(entry, True)))
         self.assertNotIn("[A]", "".join(game_view.help_entry(REGISTRY["look"], True)))
+
+    def test_help_entry_formats_multiple_aliases(self):
+        entry = ("test", "first second", "P", "", "Test command.")
+        self.assertIn("  Aliases: First Second\n", "".join(game_view.help_entry(entry, True)))
 
     def test_admin_help_is_admin_only_and_marks_commands(self):
         controller = CommandController.__new__(CommandController)
@@ -235,25 +239,41 @@ class HabbitsTest(unittest.TestCase):
         world = type("World", (), {"items": self.items, "rooms": self.rooms,
                                      "users": type("Users", (), {"data": []})()})()
         lines = "".join(RoomController(world, Sessions([]), Notifications()).item_view(Editor(), self.items.get(1, item_id), True))
-        self.assertIn('Requires:\n      has_cup equals "yes"', lines)
+        self.assertIn("put_cup:\n    Description: You put the cup away.", lines)
+        self.assertIn('Requirements:\n      - has_cup equals "yes"', lines)
         self.assertIn('Sets: has_cup "no"', lines)
 
-    def test_habbit_command_forms_and_listing(self):
+    def test_owner_examine_includes_habit_details(self):
+        item_id = self.items.create(1, "goblin")
+        self.items.cron(1, item_id, "add", field="grumble", value=30)
+        world = type("World", (), {"items": self.items, "rooms": self.rooms,
+                                     "users": type("Users", (), {"data": []})()})()
+        lines = "".join(RoomController(world, Sessions([]), Notifications()).item_view(
+            Editor(), self.items.get(1, item_id), True))
+        self.assertIn("Habits:\n  grumble (1):\n", lines)
+        self.assertIn("    Interval: 30 seconds\n", lines)
+        self.assertIn("    Chat: unset\n", lines)
+        self.assertIn("    Emote: unset\n", lines)
+        self.assertIn("    State: on\n", lines)
+
+    def test_habit_command_forms_and_listing(self):
         item_id = self.items.create(1, "owl")
         world = type("World", (), {"items": self.items, "rooms": self.rooms})()
         rooms = type("RoomEditing", (), {"editable": lambda _, session: self.rooms.get(session.room_id)})()
         controller = ItemController(world, rooms)
         editor = Editor()
-        controller.edit(editor, "habbit", Arguments("add owl 2 hoot"))
-        controller.edit(editor, "habbit", Arguments("edit owl 1 chat on Who goes there?"))
-        controller.edit(editor, "habbit", Arguments("edit owl 1 emote on ruffles feathers"))
-        controller.edit(editor, "habbit", Arguments("edit owl 1 interval 3"))
-        controller.edit(editor, "habbit", Arguments("edit owl 1 name evening hoot"))
-        listed = "".join(controller.use(editor, "habbits", Arguments("owl")))
-        self.assertIn("1: evening hoot every 3s", listed)
-        self.assertIn("emote: ruffles feathers", listed)
-        self.assertIn("chat_out: Who goes there?", listed)
-        controller.edit(editor, "habbit", Arguments("edit owl 1 chat off"))
+        controller.edit(editor, "habit", Arguments("add owl 2 hoot"))
+        controller.edit(editor, "habit", Arguments("edit owl 1 chat on Who goes there?"))
+        controller.edit(editor, "habit", Arguments("edit owl 1 emote on ruffles feathers"))
+        controller.edit(editor, "habit", Arguments("edit owl 1 interval 3"))
+        controller.edit(editor, "habit", Arguments("edit owl 1 name evening hoot"))
+        listed = "".join(controller.use(editor, "habits", Arguments("owl")))
+        self.assertIn("evening hoot (1):", listed)
+        self.assertIn("Interval: 3 seconds", listed)
+        self.assertIn("Emote: ruffles feathers", listed)
+        self.assertIn("Chat: Who goes there?", listed)
+        self.assertIn("State: on", listed)
+        controller.edit(editor, "habit", Arguments("edit owl 1 chat off"))
         self.assertNotIn("chat_out", self.items.get(1, item_id)["cron_jobs"][0])
 
     def test_cron_validation_preserves_item(self):
@@ -309,7 +329,7 @@ class HabbitsTest(unittest.TestCase):
         self.items.cron(1, item_id, "edit", 1, "chat_out", "Who goes there?")
         world = type("World", (), {"rooms": self.rooms})()
         sessions, notifications = Sessions([]), Notifications()
-        scheduler = HabbitController(world, sessions, notifications)
+        scheduler = HabitController(world, sessions, notifications)
         scheduler.tick(1000)
         self.assertEqual(notifications.messages, [])
         sessions.room_ids = [1]
@@ -524,10 +544,10 @@ class HabbitsTest(unittest.TestCase):
             players.append(player)
         sessions = type("Sessions", (), {"live": lambda _: players})()
         notifications = Notifications()
-        HabbitController(type("World", (), {"rooms": self.rooms})(), sessions, notifications).tick(1000)
+        HabitController(type("World", (), {"rooms": self.rooms})(), sessions, notifications).tick(1000)
         self.assertEqual([p.properties.values(p) for p in players], [[(1, "bard_mood", "calm")], [(1, "bard_mood", "calm")]])
         notifications.messages = []
-        HabbitController(type("World", (), {"rooms": self.rooms})(), sessions, notifications).tick(1000)
+        HabitController(type("World", (), {"rooms": self.rooms})(), sessions, notifications).tick(1000)
         self.assertEqual(notifications.messages, [])
 
 

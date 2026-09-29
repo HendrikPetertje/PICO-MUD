@@ -8,8 +8,8 @@
 
 ## 2. Builder Commands And Views
 
-- [x] 2.1 Register `/creature`, `/habbit add`, `/habbit edit`, `/habbit remove`, and `/habbits` with help text and route them through owner/admin item-edit permission checks; verify guests and non-owners cannot mutate creatures or jobs while permitted builders can.
-- [x] 2.2 Parse habbit edit interval, name, and chat/emote on/off forms and display stable cron id, name, interval, and authorized output details in `/habbits`; verify silent jobs remain valid and owner/admin versus visitor visibility matches the specification.
+- [x] 2.1 Register `/creature`, `/habit add`, `/habit edit`, `/habit remove`, and `/habits` with help text and route them through owner/admin item-edit permission checks; verify guests and non-owners cannot mutate creatures or jobs while permitted builders can.
+- [x] 2.2 Parse habit edit interval, name, and chat/emote on/off forms and display stable cron id, name, interval, and authorized output details in `/habits`; verify silent jobs remain valid and owner/admin versus visitor visibility matches the specification.
 - [x] 2.3 Split `/look` room rendering into `Items:` and `Creatures:` based on `creature: true` without changing lookup, inspection, interactions, or teleports; verify a creature appears only under `Creatures:` and remains usable via `/look at`, `/use`, and action verbs.
 
 ## 3. Runtime Scheduling
@@ -20,5 +20,5 @@
 
 ## 4. Integration Verification
 
-- [x] 4.1 Exercise a persisted creature and ordinary-item cron job through add, output edits, `/habbits`, save/reload, occupied execution, empty-room pause, and removal; verify no unrelated item interaction, movement, or teleport behavior regresses.
-- [x] 4.2 Run the available host-side validation or compile/import checks and a Pico deployment smoke test; verify startup, `/help`, `/look`, habbit commands, and scheduled notifications work without transport queue or prompt corruption.
+- [x] 4.1 Exercise a persisted creature and ordinary-item cron job through add, output edits, `/habits`, save/reload, occupied execution, empty-room pause, and removal; verify no unrelated item interaction, movement, or teleport behavior regresses.
+- [x] 4.2 Run the available host-side validation or compile/import checks and a Pico deployment smoke test; verify startup, `/help`, `/look`, habit commands, and scheduled notifications work without transport queue or prompt corruption.

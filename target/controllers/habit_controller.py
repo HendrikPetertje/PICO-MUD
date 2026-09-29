@@ -3,7 +3,7 @@ from models.properties import display_name
 from views import game_view
 
 
-class HabbitController:
+class HabitController:
     def __init__(self, world, sessions, notifications):
         self.world, self.sessions, self.notifications = world, sessions, notifications
         self.elapsed = {}

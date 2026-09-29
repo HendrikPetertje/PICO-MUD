@@ -26,7 +26,7 @@ story or becomes invalid when its rooms and items change.
   global and personal home rooms permanently public and ungated.
 - Apply interaction and occupied-room cron effects to every affected live player
   and present property changes through player inspection and notifications.
-- Extend existing room, interaction, and habbit editing commands and add
+- Extend existing room, interaction, and habit editing commands and add
   `/help programming` so owners and admins can configure and understand the feature.
 
 ## Capabilities
@@ -54,7 +54,7 @@ story or becomes invalid when its rooms and items change.
 ## Impact
 
 - Affected code: a new transient model; dependency wiring; session lifecycle;
-  room, item, and habbit controllers; rooms/items validation and mutation;
+  room, item, and habit controllers; rooms/items validation and mutation;
   command registry and help; game views; and targeted tests.
 - Affected data: optional `unlocked_if`, `visible_if`, `available_if`, and
   `set_variable` fields in `rooms.json`; no new persistent data file.

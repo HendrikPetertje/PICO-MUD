@@ -63,9 +63,9 @@ Every command begins with `/` and is case-insensitive. Plain text is sent to the
 | `/dig <direction> <room name>` | Create a connected room you own. |
 | `/create <item name>` | Create an item in a room you own. |
 | `/creature <item> [on\|off]` | Classify an item as a creature. |
-| `/habbit add <item> <seconds> <name>` | Add timed activity to an item or creature. |
-| `/habbit edit <item> <id> <field> <value>` | Edit a habbit's interval, name, chat, or emote. |
-| `/habbits <item>` | List an item's timed activity. |
+| `/habit add <item> <seconds> <name>` | Add timed activity to an item or creature. |
+| `/habit edit <item> <id> <field> <value>` | Edit a habit's interval, name, chat, or emote. |
+| `/habits <item>` | List an item's timed activity. |
 | `/interaction add <item> <action> <text>` | Add an action to an item. |
 | `/user create <name> <password>` | Create a user. Administrator only. |
 | `/save` | Save changed world data immediately. Administrator only. |
@@ -98,19 +98,19 @@ then set its destination with `/interaction teleport "brass lever" enter
 public room, which lets portal items connect two public properties. It cannot
 target another owner's private room.
 
-### Creating Creatures And Habbits
+### Creating Creatures And Habits
 
 Creatures are items with a special room display and the same actions as ordinary
 items. Create an item, then mark it with `/creature "garden sprite" on`; visitors
-can still use its interactions. Give it timed behavior with `/habbit add "garden
-sprite" 30 hum`, then configure output with `/habbit edit "garden sprite" 1
-emote on hums softly.`. Use `/habbits "garden sprite"` to review its activity.
-Habbits run only while at least one player is in the room.
+can still use its interactions. Give it timed behavior with `/habit add "garden
+sprite" 30 hum`, then configure output with `/habit edit "garden sprite" 1
+emote on hums softly.`. Use `/habits "garden sprite"` to review its activity.
+Habits run only while at least one player is in the room.
 
 ## Variables For Builders
 
 Variables let builders give each player temporary progress through a room, item,
-creature, interaction, or habbit. They work well for keys, switches, disguises,
+creature, interaction, or habit. They work well for keys, switches, disguises,
 counters, blessings, and other small pieces of story state.
 
 Variables are session state, not world state. A player's values disappear when
@@ -202,16 +202,16 @@ an optional portal move.
 /interaction clear "rune panel" enter
 ```
 
-### Habbits And Effects
+### Habits And Effects
 
-A habbit can apply an effect independently to every player in its room whenever
-it runs. Habbits run only while the room is occupied. This makes them useful for
+A habit can apply an effect independently to every player in its room whenever
+it runs. Habits run only while the room is occupied. This makes them useful for
 a healing fountain, a bard's song, a cursed fire, or any other timed room effect.
 
 ```text
-/habbit add "healing fountain" 30 restore
-/habbit set "healing fountain" 1 blessing 5
-/habbit clear "healing fountain" 1
+/habit add "healing fountain" 30 restore
+/habit set "healing fountain" 1 blessing 5
+/habit clear "healing fountain" 1
 ```
 
 The example adds `5` to each occupant's `blessing` every 30 seconds, up to `100`.
@@ -220,7 +220,7 @@ The example adds `5` to each occupant's `blessing` every 30 seconds, up to `100`
 
 Room owners and administrators bypass room, item, creature, and action conditions
 for content owned by that room's owner. They still receive configured effects when
-they use an action or occupy a room with an active habbit. Administrators can edit
+they use an action or occupy a room with an active habit. Administrators can edit
 variable metadata in any room, but cannot directly set another player's live
 values.
 

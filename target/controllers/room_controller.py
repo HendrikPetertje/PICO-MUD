@@ -222,6 +222,11 @@ class RoomController:
             yield "Actions:\n"
             for action in actions:
                 yield game_view.action_entry(action, detailed and session.can_edit(self.rooms.get(session.room_id)))
+        habits = self.world.items.crons(item)
+        if habits:
+            yield "Habits:\n"
+            for habit in habits:
+                yield game_view.habit_entry(habit, detailed and session.can_edit(self.rooms.get(session.room_id)))
 
     def properties_view(self, viewer, target):
         label = "Your" if viewer is target else target.name() + "'s"

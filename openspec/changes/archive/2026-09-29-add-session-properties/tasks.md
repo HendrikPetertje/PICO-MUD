@@ -19,11 +19,11 @@
 - [x] 3.1 Register and implement `/room-unlock-rules add|remove|clear` with identifier-style variable names and atomic validation; verify owners and admins can manage a room's conditions, room 1 remains public, and invalid edits preserve the room.
 - [x] 3.2 Implement `/item set <item> visible add|remove|clear` for item/creature visibility metadata; verify owner/admin edits, persistence, and visitor visibility behavior.
 - [x] 3.3 Extend `/interaction require` with add/remove/clear forms and implement `/interaction set` plus `/interaction clear` for action effects; verify configured actions remain bounded, atomic, hidden when unavailable, and apply effects when used.
-- [x] 3.4 Implement `/habbit set` and `/habbit clear` for cron effects; verify configuration, persisted validation, per-occupant delivery, and unchanged existing cron output behavior.
+- [x] 3.4 Implement `/habit set` and `/habit clear` for cron effects; verify configuration, persisted validation, per-occupant delivery, and unchanged existing cron output behavior.
 - [x] 3.5 Add property values to `/look at self` and `/look at <player>` and result notifications, then implement public `/help programming`; verify guests can read help and inspect live values, while no command directly sets another player's properties.
 - [x] 3.6 Add focused `/help tutorial`, `/help user`, `/help movement`, `/help building`, and `/help programming` topics with introductions and permission-filtered command lists; verify normal help advertises all topics and guest/owner views expose only permitted commands.
 
 ## 4. End-To-End Verification
 
-- [x] 4.1 Add integration tests covering a hidden key/treasure flow, a room unlock, a conditionally available creature action, numeric buff/debuff habbits, owner/admin bypasses, guest state, and reset on disconnect; verify the full test suite passes.
+- [x] 4.1 Add integration tests covering a hidden key/treasure flow, a room unlock, a conditionally available creature action, numeric buff/debuff habits, owner/admin bypasses, guest state, and reset on disconnect; verify the full test suite passes.
 - [x] 4.2 Run OpenSpec validation with `openspec validate add-session-properties --strict` and run the repository test command; verify the proposal artifacts, schemas, migrations, and implementation checks all pass.

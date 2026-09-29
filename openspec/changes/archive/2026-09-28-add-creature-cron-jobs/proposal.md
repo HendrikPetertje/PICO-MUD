@@ -10,7 +10,7 @@ Items currently provide static scenery and player-triggered interactions only. C
 - Separate room-look output into `Items:` and `Creatures:` sections so creatures do not appear as ordinary items.
 - Add up to three persistent, second-based interval cron jobs per item or creature. Each job has a room-local cron id, name, interval, and optional `chat_out` and `emote` messages.
 - Run due cron jobs only while at least one live player occupies the item's room. Send an emote before chat when both are configured.
-- Add owner/admin commands to classify items as creatures and add, list, edit, and remove an item's cron jobs: `/creature`, `/habbit add`, `/habbit edit`, `/habbit remove`, and `/habbits`.
+- Add owner/admin commands to classify items as creatures and add, list, edit, and remove an item's cron jobs: `/creature`, `/habit add`, `/habit edit`, `/habit remove`, and `/habits`.
 - Validate cron-job records on load and persist them through the existing nested room-item storage.
 
 ## Capabilities

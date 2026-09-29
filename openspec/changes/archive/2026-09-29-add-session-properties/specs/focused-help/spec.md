@@ -24,7 +24,7 @@ a description indented below it, and a blank line before the next entry.
 `tutorial` SHALL cover core concepts, movement, and chat. `user` SHALL cover
 accounts, player inspection, communication, and mail. `movement` SHALL cover
 exits, teleports, homes, and joining players. `building` SHALL cover rooms,
-exits, descriptions, and items. `programming` SHALL cover interactions, habbits,
+exits, descriptions, and items. `programming` SHALL cover interactions, habits,
 and variables, including variable scope, lifetime, conditions, typed values, and
 owner/admin condition bypasses.
 
@@ -39,7 +39,7 @@ owner/admin condition bypasses.
 
 #### Scenario: Programming explains variables
 - **WHEN** a player runs `/help programming`
-- **THEN** the topic explains interaction and habbit effects, per-player
+- **THEN** the topic explains interaction and habit effects, per-player
   per-owner variable scope, reset on disconnect or restart, AND conditions,
   numeric deltas, string replacement, and quoted numeric-looking strings
 

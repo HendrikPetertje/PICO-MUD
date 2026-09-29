@@ -50,7 +50,7 @@ actions.
 ### 3. Extend the existing test module
 
 Add tests alongside the established room-controller coverage in
-`tests/test_habbits.py`. Use the current in-memory room/item fixtures to assert
+`tests/test_habits.py`. Use the current in-memory room/item fixtures to assert
 that empty headers are absent and populated headers retain their entries. This
 avoids adding a test framework or introducing device-dependent checks.
 

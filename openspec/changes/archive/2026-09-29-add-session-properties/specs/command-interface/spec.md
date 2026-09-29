@@ -4,13 +4,13 @@
 
 ### Requirement: Variable configuration, inspection, and help
 Owners and admins permitted to edit a room SHALL configure optional room,
-item/creature, interaction, and habbit conditions or property effects through
-extensions to the existing room, `/interaction`, and `/habbit` command families.
+item/creature, interaction, and habit conditions or property effects through
+extensions to the existing room, `/interaction`, and `/habit` command families.
 They SHALL be able to replace or clear each optional field. Invalid names,
 operators, values, or condition lists SHALL leave the persistent record
 unchanged. `/help programming` SHALL be available to all players and explain
 owner-scoped temporary values, limits, AND conditions, numeric adjustment,
-string replacement, access bypass, interactions, habbits, and the supported
+string replacement, access bypass, interactions, habits, and the supported
 builder command forms.
 `/look at self` and `/look at <player>` SHALL show the target's visible current
 properties. Admins SHALL use the same builder commands and existing room-edit
@@ -26,7 +26,7 @@ strings, while unquoted integer tokens SHALL be numeric.
 
 #### Scenario: Programming help is public
 - **WHEN** a guest runs `/help programming`
-- **THEN** the MUD explains interactions, habbits, and variable-gated stories
+- **THEN** the MUD explains interactions, habits, and variable-gated stories
   without exposing another owner's configured conditions or property values
 
 ## MODIFIED Requirements
@@ -41,7 +41,7 @@ provide introductory paragraphs, and then show its relevant permission-filtered
 command list. Tutorial SHALL cover starting concepts, movement, and chat; user
 SHALL cover player/account and communication commands; movement SHALL cover exits,
 teleports, homes, and joining; building SHALL cover rooms, exits, descriptions,
-and items; programming SHALL cover interactions, habbits, and variables.
+and items; programming SHALL cover interactions, habits, and variables.
 Successful post-login welcome guidance SHALL direct players to `/help tutorial`.
 Focused topic command entries SHALL place syntax on one line, aliases and a
 description indented below it, and a blank line before the next entry. `/look` (`/l`),
@@ -49,7 +49,7 @@ description indented below it, and a blank line before the next entry. `/look` (
 `/rooms [user]`, `/items [user]`, `/who` and `/whoami` SHALL implement the
 outline's inspection behavior. Room views SHALL show the `Exits:`, `Items:`,
 and `Creatures:` headings only when their corresponding collections contain at
-least one visible entry. `/habbits <item>` SHALL list cron-job details for an
+least one visible entry. `/habits <item>` SHALL list cron-job details for an
 item or creature. Player inspection SHALL show identity, presence, and current
 properties, not invent an editable description field absent from the user schema.
 Item action names and cron-job summaries SHALL be public to visitors; detailed

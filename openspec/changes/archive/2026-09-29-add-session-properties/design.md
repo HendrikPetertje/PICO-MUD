@@ -5,7 +5,7 @@
 See `proposal.md` for motivation and the delta specs for required behavior. The
 current application has persistent users, rooms, nested items, and mail models;
 it stores session identity and location in `Session`; and its room, item, and
-habbit controllers already centralize movement, interaction execution, and
+habit controllers already centralize movement, interaction execution, and
 occupied-room cron delivery. Those paths must share property-aware access checks
 without adding a database file or changing old saved records.
 
@@ -108,8 +108,8 @@ would drift or expose hidden data.
 Extend current owner/admin commands rather than introduce a separate command
 namespace. Use `/room-unlock-rules` for room conditions, `/item set ... visible`
 for item visibility, `/interaction require` and `/interaction set` for action
-conditions and effects, and `/habbit set` for cron effects. `/interaction clear`
-and `/habbit clear` remove their corresponding effects; every condition command
+conditions and effects, and `/habit set` for cron effects. `/interaction clear`
+and `/habit clear` remove their corresponding effects; every condition command
 has an explicit `clear` form. Variable names use lowercase identifier syntax;
 quoted values are always strings while unquoted integer tokens are numbers. The
 implementation validates complete replacements before publishing and documents
@@ -129,7 +129,7 @@ commands. This keeps syntax and permissions synchronized with the command
 registry while avoiding five independent help tables.
 
 `/help programming` owns the variable explanation, because variables are used
-to program interaction and habbit behavior. This replaces the narrower
+to program interaction and habit behavior. This replaces the narrower
 `/help variables` topic.
 
 Alternative considered: retain one long tutorial plus a separate variables page.

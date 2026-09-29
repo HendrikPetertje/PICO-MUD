@@ -13,7 +13,7 @@ and creature systems fit together; the in-game help has the same gap.
   syntaxes.
 - Add guided README subsections under Commands covering movement, joining and
   teleporting; digging and describing rooms; message and teleport item actions;
-  and creatures with timed habbits.
+  and creatures with timed habits.
 - Add a public `/help tutorial` topic that presents the same four gameplay
   walkthroughs in concise paragraphs with executable command examples.
 - Point logged-in players to `/help tutorial` in the welcome guidance.

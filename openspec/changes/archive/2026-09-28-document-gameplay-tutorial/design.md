@@ -29,7 +29,7 @@ any guided examples.
 **Non-Goals:**
 
 - Do not add a command named `tutorial`, alter command permissions, or change
-  room, item, creature, or habbit mechanics.
+  room, item, creature, or habit mechanics.
 - Do not duplicate all command-reference text in the tutorial or add external
   documentation dependencies.
 - Do not change transport buffering, persistence, or the public game data model.
@@ -61,8 +61,8 @@ that guests can move through public rooms and run item actions. It will show
 message-only and portal interactions separately, and state that cross-owner
 portal targets must be public. It will only document implemented commands:
 `/go`, direction aliases, `/join`, `/teleport`, `/dig`, `/rename here`,
-`/describe here`, `/create`, `/interaction`, `/creature`, `/habbit`, and
-`/habbits`.
+`/describe here`, `/create`, `/interaction`, `/creature`, `/habit`, and
+`/habits`.
 
 Embedding the tutorial as a multi-line controller string would work but would
 mix presentation with command routing and make matching README text harder to

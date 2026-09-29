@@ -3,7 +3,7 @@
 ## MODIFIED Requirements
 
 ### Requirement: Help and inspection
-`/help [command]` SHALL list available commands and explain syntax, aliases and permissions. `/look` (`/l`), `/look at`, `/examine` (`/ex`), `/exits`, `/rooms [user]`, `/items [user]`, `/who` and `/whoami` SHALL implement the outline's inspection behavior. `/habbits <item>` SHALL list cron-job details for an item or creature. Item action names and cron-job summaries SHALL be public to visitors; detailed flavor, target, and cron-output editing data SHALL be restricted to the owner/admin.
+`/help [command]` SHALL list available commands and explain syntax, aliases and permissions. `/look` (`/l`), `/look at`, `/examine` (`/ex`), `/exits`, `/rooms [user]`, `/items [user]`, `/who` and `/whoami` SHALL implement the outline's inspection behavior. `/habits <item>` SHALL list cron-job details for an item or creature. Item action names and cron-job summaries SHALL be public to visitors; detailed flavor, target, and cron-output editing data SHALL be restricted to the owner/admin.
 
 #### Scenario: Room view
 - **WHEN** a player uses `/look`

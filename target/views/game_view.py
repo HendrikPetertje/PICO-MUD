@@ -41,14 +41,16 @@ def room_item_line(item):
 def action_entry(action, detailed=False):
     result = "  " + action["action"]
     if detailed:
-        result += ": " + action["flavor_text"]
+        result += ":\n"
+        result += "    Description: " + action["flavor_text"] + "\n"
         if "teleport_to_room_id" in action:
-            result += " -> room " + str(action["teleport_to_room_id"])
+            result += "    Teleport to: room " + str(action["teleport_to_room_id"]) + "\n"
         if action["available_if"]:
-            result += "\n    Requires:\n"
-            result += "".join("      " + condition_entry(rule) + "\n" for rule in action["available_if"])
+            result += "    Requirements:\n"
+            result += "".join("      - " + condition_entry(rule) + "\n" for rule in action["available_if"])
         if "set_variable" in action:
-            result += "\n    Sets: " + effect_entry(action["set_variable"])
+            result += "    Sets: " + effect_entry(action["set_variable"]) + "\n"
+        return result
     return result + "\n"
 
 
@@ -66,14 +68,17 @@ def effect_entry(effect):
     return "{} {}".format(effect[0], property_value(effect[1]))
 
 
-def habbit_entry(job, detailed=False):
-    result = "{}: {} every {}s".format(job["id"], job["name"], job["interval_seconds"])
+def habit_entry(job, detailed=False):
+    result = "  {} ({})".format(job["name"], job["id"])
     if detailed:
-        for field in ("emote", "chat_out"):
-            if field in job:
-                result += " {}: {}".format(field, job[field])
+        result += ":\n"
+        result += "    Interval: {} seconds\n".format(job["interval_seconds"])
+        result += "    Chat: {}\n".format(job.get("chat_out", "unset"))
+        result += "    Emote: {}\n".format(job.get("emote", "unset"))
+        result += "    State: on\n"
         if "set_variable" in job:
-            result += " sets: " + effect_entry(job["set_variable"])
+            result += "    Sets: " + effect_entry(job["set_variable"]) + "\n"
+        return result
     return result + "\n"
 
 
@@ -118,7 +123,8 @@ def help_entry(entry, detailed=False):
     yield "/" + verb + (" " + syntax if syntax else "") + (" [A]" if permission == "A" else "") + "\n"
     if detailed:
         if aliases:
-            yield "  Aliases: " + aliases.title() + "\n"
+            aliases = " ".join(alias[:1].upper() + alias[1:] for alias in aliases.split())
+            yield "  Aliases: " + aliases + "\n"
         yield "  " + description + "\n\n"
 
 
@@ -129,7 +135,7 @@ def help_topics(admin=False):
     yield "  /help user - Meet people, manage your account, and send messages.\n"
     yield "  /help movement - Travel by exits, teleport, visit homes, and join players.\n"
     yield "  /help building - Shape rooms, exits, descriptions, and scenery.\n"
-    yield "  /help programming - Give items and creatures actions, habbits, and variables.\n"
+    yield "  /help programming - Give items and creatures actions, habits, and variables.\n"
     if admin:
         yield "  /help admin - Manage players, the world, and server operations. [A]\n"
 
@@ -158,7 +164,7 @@ def help_topic(topic):
         yield "Items are scenery, not inventory. Use them to add texture, secrets, and characters to your rooms; admins can help keep any property in good order.\n\n"
     elif topic == "programming":
         yield "Programming rooms\n\n"
-        yield "Programming is how you give a place a little spark. Interactions let an item or creature respond to players; habbits let it do something on its own while people are nearby.\n\n"
+        yield "Programming is how you give a place a little spark. Interactions let an item or creature respond to players; habits let it do something on its own while people are nearby.\n\n"
         yield "Variables remember small things for one player's visit: a key they found, a door they opened, or a blessing they received. "
         yield "They belong to the owner whose world set them and disappear when the player leaves or the MUD restarts.\n\n"
         yield "Every rule in a condition list must pass. Numbers can rise or fall between 0 and 100, while strings replace a value. "
@@ -168,7 +174,7 @@ def help_topic(topic):
         yield "/item set <item> visible add|remove <name> <condition> <value> | clear\n"
         yield "/interaction require <item> <action> add|remove <name> <condition> <value> | clear\n"
         yield "/interaction set <item> <action> <name> <value> | clear <item> <action>\n"
-        yield "/habbit set <item> <id> <name> <value> | clear <item> <id>\n\n"
+        yield "/habit set <item> <id> <name> <value> | clear <item> <id>\n\n"
     else:
         yield "Administration\n\n"
         yield "Administration helps keep the shared world welcoming and running smoothly. These commands carry weight because they affect other players, accounts, or the live server.\n\n"

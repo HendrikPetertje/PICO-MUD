@@ -8,7 +8,7 @@ permissions. `/help tutorial` SHALL be available before and after login and
 provide a readable, paragraph-based walkthrough of four existing gameplay
 workflows: moving, joining players and teleporting; creating and exploring a
 room; creating a message-only item action and a teleporting item action; and
-classifying a creature and configuring its timed habbits. The walkthrough SHALL
+classifying a creature and configuring its timed habits. The walkthrough SHALL
 use valid command examples, explain that item portals can target another
 owner's public room but not a private room, and distinguish builder-only steps
 from actions that guests may perform. Successful post-login welcome guidance
@@ -16,7 +16,7 @@ SHALL direct players to `/help tutorial`. Regular `/help` output SHALL preserve
 its command syntax reminder and include a blank line after that reminder before
 the final prompt. `/look` (`/l`), `/look at`, `/examine` (`/ex`), `/exits`,
 `/rooms [user]`, `/items [user]`, `/who` and `/whoami` SHALL implement the
-outline's inspection behavior. `/habbits <item>` SHALL list cron-job details for
+outline's inspection behavior. `/habits <item>` SHALL list cron-job details for
 an item or creature. Player inspection SHALL show identity and presence, not
 invent an editable description field absent from the user schema. Item action
 names and cron-job summaries SHALL be public to visitors; detailed flavor,

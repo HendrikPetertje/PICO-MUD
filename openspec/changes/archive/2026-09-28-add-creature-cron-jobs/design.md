@@ -45,7 +45,7 @@ Alternative considered: send directly to sockets from the scheduler. Rejected be
 
 ### Manage cron jobs through explicit bounded commands
 
-Extend command registration and item editing with the agreed `/habbit` subcommands plus `/habbits`. Validate creation and updates in the items model. Use next available room-local cron ids, preserving ids of unrelated jobs.
+Extend command registration and item editing with the agreed `/habit` subcommands plus `/habits`. Validate creation and updates in the items model. Use next available room-local cron ids, preserving ids of unrelated jobs.
 
 Alternative considered: encode cron data in interaction text. Rejected because it conflates player-triggered behavior with scheduled output and prevents clear validation.
 

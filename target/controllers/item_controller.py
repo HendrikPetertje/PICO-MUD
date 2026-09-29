@@ -37,7 +37,7 @@ class ItemController:
             self.rooms.editable(session, target)
             new_id = self.world.items.move(session.room_id, item, target)
             return "Moved item; new id " + str(new_id) + ".\n"
-        elif verb == "habbit":
+        elif verb == "habit":
             operation, item = args.pop().lower(), args.pop()
             if operation == "add":
                 interval = identity(args.pop())
@@ -55,7 +55,7 @@ class ItemController:
                     args.end()
                     self.world.items.cron(session.room_id, item, "remove", cron_id)
                 else:
-                    require(operation == "edit", "Use habbit add, edit or remove.")
+                    require(operation == "edit", "Use habit add, edit or remove.")
                     field = args.pop().lower()
                     if field == "interval":
                         value = identity(args.pop()); args.end(); field = "interval_seconds"
@@ -114,20 +114,20 @@ class ItemController:
         for action in actions:
             yield game_view.action_entry(action, detailed)
 
-    def habbits(self, session, item):
+    def habits(self, session, item):
         detailed = session.can_edit(self.world.rooms.get(session.room_id))
         jobs = self.world.items.crons(item)
         if not jobs:
-            yield "No habbits.\n"
+            yield "No habits.\n"
         for job in jobs:
-            yield game_view.habbit_entry(job, detailed)
+            yield game_view.habit_entry(job, detailed)
 
     def use(self, session, verb, args):
         item = self.world.items.get(session.room_id, args.pop()); args.end()
         owner = self.world.rooms.get(session.room_id)["owner_id"]
         require(session.properties.allowed(session, owner, item["visible_if"]), "No such item.")
-        if verb == "habbits":
-            return self.habbits(session, item)
+        if verb == "habits":
+            return self.habits(session, item)
         actions = [action for action in item["interactions"] if session.properties.allowed(session, owner, action["available_if"])]
         if verb == "interactions" or (verb == "use" and len(actions) != 1):
             return self.actions(session, item)

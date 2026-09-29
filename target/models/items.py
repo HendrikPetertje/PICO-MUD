@@ -1,4 +1,5 @@
 from models.storage import require, text, positive, memory_guard, GameError
+from models.properties import conditions, effect
 
 
 class Items:
@@ -26,7 +27,7 @@ class Items:
         require(len(items) < self.config.MAX_ITEMS_PER_ROOM, "Item limit reached.")
         memory_guard(self.config)
         identity = max([i["id"] for i in items] + [0]) + 1
-        item = {"id": identity, "name": name, "description": "An unremarkable item.", "interactions": []}
+        item = {"id": identity, "name": name, "description": "An unremarkable item.", "visible_if": [], "interactions": []}
         self._replace(room_id, items + [item])
         return identity
 
@@ -74,6 +75,59 @@ class Items:
                 return action
         raise GameError("This item has no such action.")
 
+    def rules(self, room_id, identity, field, operation, rule=None, action_name=None):
+        item = self.get(room_id, identity)
+        target = item if action_name is None else self.action(item, action_name)
+        current = target[field]
+        if operation == "clear":
+            updated = []
+        else:
+            conditions([rule])
+            if operation == "add":
+                require(rule not in current, "That rule already exists.")
+                updated = current + [rule]
+            else:
+                require(operation == "remove" and rule in current, "No such rule.")
+                updated = [entry for entry in current if entry != rule]
+        if updated == current:
+            return False
+        changed_item = item.copy()
+        if action_name is None:
+            changed_item[field] = updated
+        else:
+            changed_action = target.copy(); changed_action[field] = updated
+            changed_item["interactions"] = [changed_action if entry["action"] == target["action"] else entry
+                                            for entry in item["interactions"]]
+        self._replace(room_id, [changed_item if entry["id"] == item["id"] else entry
+                                for entry in self.rooms.get(room_id)["items"]])
+        return True
+
+    def property_effect(self, room_id, identity, field, value=None, action_name=None, cron_id=None):
+        item = self.get(room_id, identity)
+        if action_name is not None:
+            target = self.action(item, action_name)
+            entries, key = item["interactions"], "action"
+        else:
+            entries, key = item.get("cron_jobs", []), "id"
+            target = next((job for job in entries if job["id"] == cron_id), None)
+            require(target is not None, "No such cron job.")
+        changed = target.copy()
+        if value is None:
+            if field not in changed:
+                return False
+            changed.pop(field, None)
+        else:
+            effect(value)
+            if changed.get(field) == value:
+                return False
+            changed[field] = value
+        changed_item = item.copy()
+        changed_item["interactions" if action_name is not None else "cron_jobs"] = [
+            changed if entry[key] == target[key] else entry for entry in entries]
+        self._replace(room_id, [changed_item if entry["id"] == item["id"] else entry
+                                for entry in self.rooms.get(room_id)["items"]])
+        return True
+
     def interaction(self, room_id, identity, operation, name, value=None):
         item = self.get(room_id, identity)
         name = self.action_name(name)
@@ -86,7 +140,7 @@ class Items:
             if existing and existing["flavor_text"] == value:
                 return
             memory_guard(self.config)
-            changed = existing.copy() if existing else {"action": name}
+            changed = existing.copy() if existing else {"action": name, "available_if": []}
             changed["flavor_text"] = value
         else:
             require(existing is not None, "No such interaction.")
@@ -184,6 +238,7 @@ class Items:
                 text(item.get("name"), self.config.MAX_NAME_LENGTH, "Item name")
                 text(item.get("description"), self.config.MAX_DESCRIPTION_LENGTH, "Item description", empty=True)
                 require("creature" not in item or item["creature"] is True, "Invalid creature flag.")
+                conditions(item.get("visible_if"))
                 actions = item.get("interactions")
                 require(type(actions) is list and len(actions) <= self.config.MAX_INTERACTIONS_PER_ITEM,
                         "Invalid interactions.")
@@ -194,6 +249,9 @@ class Items:
                     require(name not in names and name == action["action"], "Duplicate or noncanonical action.")
                     names.add(name)
                     text(action.get("flavor_text"), self.config.MAX_TEXT_LENGTH, "Flavor text")
+                    conditions(action.get("available_if"))
+                    if "set_variable" in action:
+                        effect(action["set_variable"])
                     if "teleport_to_room_id" in action:
                         self.rooms.get(action["teleport_to_room_id"])
                 jobs = item.get("cron_jobs", [])
@@ -209,3 +267,5 @@ class Items:
                     for field in ("chat_out", "emote"):
                         if field in job:
                             text(job[field], self.config.MAX_TEXT_LENGTH, "Cron job " + field)
+                    if "set_variable" in job:
+                        effect(job["set_variable"])

@@ -1,4 +1,5 @@
 from models.storage import Records, require, text, positive, memory_guard
+from models.properties import conditions
 
 
 DIRECTIONS = ("north", "east", "south", "west", "up", "down")
@@ -26,7 +27,28 @@ class Rooms(Records):
         require(len(self.owned(owner)) < self.config.MAX_ROOMS_PER_USER, "Room limit reached.")
         memory_guard(self.config)
         return {"room_id": self.next_id, "owner_id": owner, "name": name,
-                "description": "An empty room.", "private": False, "exits": {}, "items": []}
+                "description": "An empty room.", "private": False, "unlocked_if": [], "exits": {}, "items": []}
+
+    def unlock_rules(self, identity, operation, rule=None, homes=()):
+        room = self.get(identity)
+        rules = room["unlocked_if"]
+        require((identity != 1 and identity not in homes) or operation == "clear",
+                "Home rooms are permanently public.")
+        if operation == "clear":
+            updated = []
+        else:
+            conditions([rule])
+            if operation == "add":
+                require(rule not in rules, "That unlock rule already exists.")
+                updated = rules + [rule]
+            else:
+                require(operation == "remove" and rule in rules, "No such unlock rule.")
+                updated = [current for current in rules if current != rule]
+        if updated == rules:
+            return False
+        changed = room.copy(); changed["unlocked_if"] = updated
+        self.publish(self.prepare_replace(identity, changed))
+        return True
 
     def edit(self, identity, field, value):
         require(field in ("name", "description", "private"), "Invalid room field.")
@@ -123,6 +145,7 @@ class Rooms(Records):
             text(room.get("name"), self.config.MAX_NAME_LENGTH, "Room name")
             text(room.get("description"), self.config.MAX_DESCRIPTION_LENGTH, "Room description", empty=True)
             require(type(room.get("private")) is bool, "Invalid private flag.")
+            conditions(room.get("unlocked_if"))
             require(type(room.get("exits")) is dict and type(room.get("items")) is list, "Invalid room collections.")
             for way, exit in room["exits"].items():
                 require(way in DIRECTIONS and type(exit) is dict, "Invalid exit.")
@@ -134,4 +157,6 @@ class Rooms(Records):
                 text(exit.get("activation_text"), self.config.MAX_TEXT_LENGTH, "activation_text", empty=True)
         require(self.get(1)["owner_id"] == 1 and not self.get(1)["private"], "Invalid global home.")
         for user in users.data:
-            require(self.get(user["home_room_id"])["owner_id"] == user["user_id"], "Invalid personal home.")
+            home = self.get(user["home_room_id"])
+            require(home["owner_id"] == user["user_id"], "Invalid personal home.")
+            require(not home["private"] and not home["unlocked_if"], "Homes must remain public.")

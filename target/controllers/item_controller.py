@@ -9,6 +9,16 @@ class ItemController:
 
     def edit(self, session, verb, args):
         self.rooms.editable(session)
+        if verb == "item":
+            require(args.pop().lower() == "set", "Use /item set <item> visible ...")
+            item = args.pop(); require(args.pop().lower() == "visible", "Expected visible.")
+            operation = args.pop().lower()
+            if operation == "clear":
+                args.end(); self.world.items.rules(session.room_id, item, "visible_if", operation)
+            else:
+                rule = [args.pop(), args.pop().lower(), self.value(args)]
+                args.end(); self.world.items.rules(session.room_id, item, "visible_if", operation, rule)
+            return "Updated.\n"
         if verb == "create":
             return "Created item " + str(self.world.items.create(session.room_id, args.rest())) + ".\n"
         if verb == "creature":
@@ -32,6 +42,13 @@ class ItemController:
             if operation == "add":
                 interval = identity(args.pop())
                 self.world.items.cron(session.room_id, item, "add", field=args.rest(), value=interval)
+            elif operation in ("set", "clear"):
+                cron_id = identity(args.pop())
+                if operation == "clear":
+                    args.end(); self.world.items.property_effect(session.room_id, item, "set_variable", cron_id=cron_id)
+                else:
+                    value = [args.pop(), self.value(args)]; args.end()
+                    self.world.items.property_effect(session.room_id, item, "set_variable", value, cron_id=cron_id)
             else:
                 cron_id = identity(args.pop())
                 if operation == "remove":
@@ -53,9 +70,24 @@ class ItemController:
                             args.end()
                         field = "chat_out" if field == "chat" else field
                     self.world.items.cron(session.room_id, item, "edit", cron_id, field, value)
-        else:
+        elif verb == "interaction":
             operation, item, action = args.pop().lower(), args.pop(), args.pop()
-            if operation == "add":
+            if operation == "require":
+                rule_operation = args.pop().lower()
+                if rule_operation == "clear":
+                    args.end(); self.world.items.rules(session.room_id, item, "available_if", rule_operation, action_name=action)
+                else:
+                    rule = [args.pop(), args.pop().lower(), self.value(args)]
+                    args.end(); self.world.items.rules(session.room_id, item, "available_if", rule_operation, rule, action)
+                return "Updated.\n"
+            elif operation == "set":
+                value = [args.pop(), self.value(args)]; args.end()
+                self.world.items.property_effect(session.room_id, item, "set_variable", value, action_name=action)
+                return "Updated.\n"
+            elif operation == "clear":
+                args.end(); self.world.items.property_effect(session.room_id, item, "set_variable", action_name=action)
+                return "Updated.\n"
+            elif operation == "add":
                 value = args.rest()
             elif operation == "teleport":
                 value = args.pop(); args.end()
@@ -68,11 +100,18 @@ class ItemController:
             self.world.items.interaction(session.room_id, item, operation, action, value)
         return "Updated.\n"
 
+    def value(self, args):
+        value = args.pop()
+        return value if args.quoted or not value.lstrip("-").isdigit() else int(value)
+
     def actions(self, session, item):
         detailed = session.can_edit(self.world.rooms.get(session.room_id))
-        if not item["interactions"]:
+        owner = self.world.rooms.get(session.room_id)["owner_id"]
+        actions = [action for action in item["interactions"] if
+                   session.properties.allowed(session, owner, action["available_if"])]
+        if not actions:
             yield "No interactions.\n"
-        for action in item["interactions"]:
+        for action in actions:
             yield game_view.action_entry(action, detailed)
 
     def habbits(self, session, item):
@@ -85,11 +124,18 @@ class ItemController:
 
     def use(self, session, verb, args):
         item = self.world.items.get(session.room_id, args.pop()); args.end()
+        owner = self.world.rooms.get(session.room_id)["owner_id"]
+        require(session.properties.allowed(session, owner, item["visible_if"]), "No such item.")
         if verb == "habbits":
             return self.habbits(session, item)
-        if verb == "interactions" or (verb == "use" and len(item["interactions"]) != 1):
+        actions = [action for action in item["interactions"] if session.properties.allowed(session, owner, action["available_if"])]
+        if verb == "interactions" or (verb == "use" and len(actions) != 1):
             return self.actions(session, item)
-        action = item["interactions"][0] if verb == "use" else self.world.items.action(item, verb)
+        action = actions[0] if verb == "use" else next((entry for entry in actions if entry["action"] == verb), None)
+        require(action is not None, "No such action.")
+        if "set_variable" in action:
+            key, value = session.properties.apply(session, owner, action["set_variable"])
+            return self.with_property(session, key, value, action)
         flavor = action["flavor_text"]
         destination = action.get("teleport_to_room_id")
         if destination is None:
@@ -99,3 +145,15 @@ class ItemController:
         except GameError as error:
             return flavor + "\n" + str(error) + "\n"
         return self.rooms.with_text(flavor, self.rooms.view(session))
+
+    def with_property(self, session, key, value, action):
+        from models.properties import display_name
+        message = action["flavor_text"] + "\n{}: {}\n".format(display_name(key), value)
+        destination = action.get("teleport_to_room_id")
+        if destination is None:
+            return message
+        try:
+            self.rooms.move(session, destination)
+        except GameError as error:
+            return message + str(error) + "\n"
+        return self.rooms.with_text(message.rstrip("\n"), self.rooms.view(session))

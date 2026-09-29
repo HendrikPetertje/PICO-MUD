@@ -1,3 +1,5 @@
+from models.storage import GameError
+from models.properties import display_name
 from views import game_view
 
 
@@ -26,4 +28,12 @@ class HabbitController:
                         self.notifications.room(room_id, game_view.speech(item["name"], job["emote"], True))
                     if "chat_out" in job:
                         self.notifications.room(room_id, game_view.speech(item["name"], job["chat_out"]))
+                    if "set_variable" in job:
+                        for session in self.sessions.live():
+                            if session.room_id == room_id:
+                                try:
+                                    key, value = session.properties.apply(session, room["owner_id"], job["set_variable"])
+                                    self.notifications.send(session, "{}: {}".format(display_name(key), value))
+                                except GameError as error:
+                                    self.notifications.send(session, str(error))
         self.elapsed = {key: value for key, value in self.elapsed.items() if key in active}

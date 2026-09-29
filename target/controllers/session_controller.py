@@ -3,9 +3,10 @@ from views import game_view
 
 
 class Session:
-    def __init__(self, client, users, rooms):
+    def __init__(self, client, users, rooms, properties):
         self.client, self.users = client, users
         self.rooms = rooms
+        self.properties = properties
         self.user_id = None
         self.guest_name = None
         self.room_id = None
@@ -31,7 +32,8 @@ class Session:
         return user["name"] if user is not None else self.guest_name
 
     def can_enter(self, room):
-        return not room["private"] or self.user_id == room["owner_id"] or self.admin()
+        return ((not room["private"] or self.user_id == room["owner_id"] or self.admin()) and
+                self.properties.allowed(self, room["owner_id"], room["unlocked_if"]))
 
     def can_edit(self, room):
         return self.playing and self.user_id is not None and (self.user_id == room["owner_id"] or self.admin())
@@ -86,16 +88,17 @@ class Session:
 
 
 class SessionController:
-    def __init__(self, users, rooms):
+    def __init__(self, users, rooms, properties):
         self.users = users
         self.rooms = rooms
+        self.properties = properties
         self.sessions = {}
         self.by_user = {}
         self.guest_counter = 0
         self.notifications = None
 
     def new(self, client):
-        session = Session(client, self.users, self.rooms)
+        session = Session(client, self.users, self.rooms, self.properties)
         self.sessions[client] = session
         return session
 
@@ -138,6 +141,7 @@ class SessionController:
             if self.notifications:
                 self.notifications.room(room_id, game_view.presence(name, "leaves"), session)
         session.cancel()
+        self.properties.clear(session)
 
     def kick(self, session, message):
         self.remove(session)

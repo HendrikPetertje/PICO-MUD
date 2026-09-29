@@ -6,6 +6,7 @@ from models.users import Users
 from models.rooms import Rooms
 from models.items import Items
 from models.mail import Mail
+from models import migrations
 
 
 class PersistenceController:
@@ -38,6 +39,7 @@ class PersistenceController:
                 self.mail.load()
             else:
                 self.mail.publish({})
+        migrations.apply(self.rooms)
         self.validate()
         results = self.save()
         require(not any(m.dirty for m in (self.users, self.rooms, self.mail)),

@@ -30,21 +30,40 @@ class CommandController:
 
     def help(self, session, args):
         topic = args.pop(True); args.end()
-        if topic and topic.lstrip('/').lower() == "tutorial":
-            return game_view.tutorial()
+        topic = topic.lstrip('/').lower() if topic else None
+        focused = {
+            "tutorial": ("connect", "quit", "help", "look", "say", "emote"),
+            "user": ("password", "who", "whoami", "look", "whisper", "page", "mail"),
+            "movement": ("look", "exits", "go", "north", "east", "south", "west", "up", "down",
+                         "teleport", "home", "join"),
+            "building": ("dig", "undig", "rename", "describe", "private", "sethome", "destroy",
+                          "message", "lock", "unlock", "create", "creature", "item", "move"),
+            "programming": ("interaction", "interactions", "habbit", "habbits", "room-unlock-rules", "item"),
+            "admin": ("shout", "user", "users", "boot", "save", "uptime"),
+        }
+        if topic in focused:
+            require(topic != "admin" or session.admin(), "Admin permission required.")
+            return self.focused_help(session, topic, focused[topic])
         entries = COMMANDS
         if topic:
-            entry = REGISTRY.get(topic.lstrip('/').lower())
+            entry = REGISTRY.get(topic)
             require(entry is not None, "Unknown help topic.")
             entries = (entry,)
-        return self.help_lines(session, entries, bool(topic))
+            return self.help_lines(session, entries)
+        return game_view.help_topics(session.admin())
 
-    def help_lines(self, session, entries, detailed):
-        yield "PICO MUD commands (G guest, U user, O owner/admin, A admin):\n"
+    def focused_help(self, session, topic, names):
+        yield from game_view.help_topic(topic)
+        yield "Commands:\n"
+        for name in names:
+            entry = REGISTRY[name]
+            if self.allowed(session, entry[2]):
+                yield from game_view.help_entry(entry, True)
+
+    def help_lines(self, session, entries):
         for entry in entries:
             if self.allowed(session, entry[2]):
-                yield from game_view.help_entry(entry, detailed)
-        yield 'Quote multiword targets. Plain text or leading " speaks; leading : emotes.\n\n'
+                yield from game_view.help_entry(entry, True)
 
     def dispatch(self, session, line):
         if not line.startswith('/'):
@@ -88,11 +107,11 @@ class CommandController:
             return self.rooms.inspect(session, verb, args)
         if verb in DIRECTIONS or verb in ("go", "teleport", "home", "join"):
             return self.rooms.travel(session, verb, args)
-        if verb in ("dig", "undig", "rename", "describe", "private", "sethome", "message", "lock", "unlock"):
+        if verb in ("dig", "undig", "rename", "describe", "private", "sethome", "message", "lock", "unlock", "room-unlock-rules"):
             return self.rooms.build(session, verb, args)
         if verb == "destroy" and args.remaining().lower().startswith("room "):
             return self.rooms.build(session, verb, args)
-        if verb in ("create", "destroy", "move", "interaction", "creature", "habbit"):
+        if verb in ("create", "destroy", "move", "interaction", "creature", "habbit", "item"):
             return self.items.edit(session, verb, args)
         if verb in ("use", "interactions", "habbits"):
             return self.items.use(session, verb, args)

@@ -1,5 +1,6 @@
 from models.storage import require, GameError
 from models.rooms import DIRECTIONS, ALIASES, OPPOSITE, direction
+from models.properties import display_name
 from modules.command_parser import identity, toggle
 from views import game_view
 
@@ -36,7 +37,8 @@ class RoomController:
                     item = self.world.items.get(room_id, item_id)
                 except GameError:
                     continue
-                if bool(item.get("creature")) == creature:
+                if (bool(item.get("creature")) == creature and
+                        session.properties.allowed(session, room["owner_id"], item["visible_if"])):
                     entries.append(game_view.room_item_line(item))
             if entries:
                 yield label + ":\n"
@@ -101,6 +103,15 @@ class RoomController:
                 visitor.reply(self.view(visitor))
 
     def build(self, session, verb, args):
+        if verb == "room-unlock-rules":
+            room = self.editable(session)
+            operation = args.pop().lower()
+            if operation == "clear":
+                args.end(); self.rooms.unlock_rules(room["room_id"], operation, homes=self.home_ids())
+            else:
+                rule = [args.pop(), args.pop().lower(), self.property_value(args)]
+                args.end(); self.rooms.unlock_rules(room["room_id"], operation, rule, self.home_ids())
+            return "Updated.\n"
         if verb == "destroy":
             require(args.pop().lower() == "room", "Expected room <id>.")
             room_id = identity(args.pop()); args.end()
@@ -126,6 +137,7 @@ class RoomController:
             self.rooms.edit_exit(room["room_id"], way)
         elif verb == "private":
             value = toggle(args.pop(True), room["private"]); args.end()
+            require(not value or room["room_id"] not in self.home_ids(), "Home rooms are permanently public.")
             self.rooms.edit(room["room_id"], "private", value)
             if value:
                 for visitor in self.sessions.live():
@@ -135,6 +147,7 @@ class RoomController:
         elif verb == "sethome":
             args.end()
             require(session.user_id is not None, "Guests have no personal home.")
+            require(not room["private"] and not room["unlocked_if"], "Homes must be public and have no unlock rules.")
             self.world.users.set_home(session.user_id, room)
         elif verb in ("lock", "unlock"):
             way = args.pop(); args.end()
@@ -174,6 +187,8 @@ class RoomController:
         if verb == "look":
             require(args.pop().lower() == "at", "Use /look at <target>.")
         target = args.pop(); args.end()
+        if target.lower() == "self":
+            return self.properties_view(session, session)
         if target.lower() in DIRECTIONS or target.lower() in ALIASES:
             way = direction(target)
             exit = room["exits"].get(way)
@@ -192,7 +207,8 @@ class RoomController:
                 raise
             player = self.sessions.named(target)
             require(player.room_id == session.room_id, "Player is not here.")
-            return player.name() + (" (guest)" if player.user_id is None else " (user " + str(player.user_id) + ")") + " is here.\n"
+            return self.properties_view(session, player)
+        require(session.properties.allowed(session, room["owner_id"], item["visible_if"]), "No such item.")
         return self.item_view(session, item, verb == "examine")
 
     def item_view(self, session, item, detailed=False):
@@ -200,10 +216,30 @@ class RoomController:
         yield item["description"] + "\n"
         if detailed:
             yield "Item {} in room {}, owner {}\n".format(item["id"], session.room_id, self.rooms.get(session.room_id)["owner_id"])
-        if item["interactions"]:
+        actions = [action for action in item["interactions"] if
+                   session.properties.allowed(session, self.rooms.get(session.room_id)["owner_id"], action["available_if"])]
+        if actions:
             yield "Actions:\n"
-            for action in item["interactions"]:
+            for action in actions:
                 yield game_view.action_entry(action, detailed and session.can_edit(self.rooms.get(session.room_id)))
+
+    def properties_view(self, viewer, target):
+        label = "Your" if viewer is target else target.name() + "'s"
+        lines = [label + " properties:\n"]
+        values = target.properties.values(target)
+        if values:
+            lines.extend("  {} (owner {}): {}\n".format(display_name(key), owner, value)
+                         for owner, key, value in values)
+        else:
+            lines.append("  None.\n")
+        return lines
+
+    def property_value(self, args):
+        value = args.pop()
+        return value if args.quoted or not value.lstrip("-").isdigit() else int(value)
+
+    def home_ids(self):
+        return [user["home_room_id"] for user in self.world.users.data]
 
     def who(self, viewer):
         for player in self.sessions.live():
@@ -228,4 +264,5 @@ class RoomController:
                         item = self.world.items.get(room_id, item_id)
                     except GameError:
                         continue
-                    yield (game_view.item_entry(room_id, item), room_id)
+                    if viewer.properties.allowed(viewer, room["owner_id"], item["visible_if"]):
+                        yield (game_view.item_entry(room_id, item), room_id)

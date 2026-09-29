@@ -252,52 +252,82 @@ users.json - contains the user data, including usernames, passwords, and
 admin status. The top level is an array of users.
 
 ```
-{
-  user_id: number // unique identifier for the user. the first admin is always user_id 1
-  name: string
-  password: string // sha256 hex digest of PASSWORD_SALT + password
-  admin: boolean
-  home_room_id: number // the room_id of the user's home room
-  banned: boolean // whether the user is banned from the MUD
-}
+[
+  {
+    user_id: number // unique identifier for the user. the first admin is always user_id 1
+    name: string
+    password: string // sha256 hex digest of PASSWORD_SALT + password
+    admin: boolean
+    home_room_id: number // the room_id of the user's home room
+    banned: boolean // whether the user is banned from the MUD
+  }
+]
 ```
 
 rooms.json - contains the room data, including room descriptions, exits, and
 items. The top level is an array of rooms.
 
 ```
-{
-  room_id: number // unique identifier for the room
-  owner_id: number // the user_id of the user who owns this room (and all items in it)
-  name: string
-  description: string
-  private: boolean // only the owner and admins can enter a private room. room 1 is always public.
-  exits: {
-    // to_room_id is the room_id of the room that this exit leads to.
-    // name is the name of the exit, this is what the user sees when they look around in the room.
-    // description is the description of the exit, this is what the user sees when they look at the exit.
-    // locked is a boolean that indicates whether the exit is locked or not. if the exit is locked, nobody can use it to navigate to the other room. only the room owner can lock/unlock it.
-    // activation_text is the text that is displayed to the user when they use the exit.
-    north?: { to_room_id: number, name: string, description: string, locked: boolean, activation_text: string }
-    east?: { to_room_id: number, name: string, description: string, locked: boolean, activation_text: string }
-    south?: { to_room_id: number, name: string, description: string, locked: boolean, activation_text: string }
-    west?: { to_room_id: number, name: string, description: string, locked: boolean, activation_text: string }
-    up?: { to_room_id: number, name: string, description: string, locked: boolean, activation_text: string }
-    down?: { to_room_id: number, name: string, description: string, locked: boolean, activation_text: string }
+[
+  {
+    room_id: number // unique identifier for the room
+    owner_id: number // the user_id of the user who owns this room (and all items in it)
+    name: string
+    description: string
+    private: boolean // only the owner and admins can enter a private room. room 1 is always public.
+    unlocked_if: [[variable_name: string, operator: "equals" | "more_than" | "less_than", value: number | string]]
+    exits: {
+      // to_room_id is the room_id of the room that this exit leads to.
+      // name is the name of the exit, this is what the user sees when they look around in the room.
+      // description is the description of the exit, this is what the user sees when they look at the exit.
+      // locked is a boolean that indicates whether the exit is locked or not. if the exit is locked, nobody can use it to navigate to the other room. only the room owner can lock/unlock it.
+      // activation_text is the text that is displayed to the user when they use the exit.
+      north?: { to_room_id: number, name: string, description: string, locked: boolean, activation_text: string }
+      east?: { to_room_id: number, name: string, description: string, locked: boolean, activation_text: string }
+      south?: { to_room_id: number, name: string, description: string, locked: boolean, activation_text: string }
+      west?: { to_room_id: number, name: string, description: string, locked: boolean, activation_text: string }
+      up?: { to_room_id: number, name: string, description: string, locked: boolean, activation_text: string }
+      down?: { to_room_id: number, name: string, description: string, locked: boolean, activation_text: string }
+    }
+    items: [
+      {
+        id: number, // unique within this room only
+        name: string,
+        description: string,
+        visible_if: [[variable_name: string, operator: "equals" | "more_than" | "less_than", value: number | string]],
+        creature?: true, // present only when this item is a creature
+        interactions: [{action: string, flavor_text: string, available_if: [[variable_name: string, operator: "equals" | "more_than" | "less_than", value: number | string]], teleport_to_room_id?: number, set_variable?: [variable_name: string, value: number | string]}],
+        cron_jobs?: [
+          {
+            id: number, // unique within this item only
+            name: string,
+            interval_seconds: number, // positive
+            chat_out?: string,
+            emote?: string,
+            set_variable?: [variable_name: string, value: number | string]
+          }
+        ]
+      }
+    ]
   }
-  items: [
-   {
-      id: number, // unique within this room only
-      name: string,
-      description: string,
-      interactions: [{action: string, flavor_text: string, teleport_to_room_id?: number}]
-   }
-  ]
-}
+]
 ```
 
 Item ids are unique within their room. When an item is moved to another room,
 it is removed from the old room and re-created in the new room with a new id.
+`creature` is optional and, when present, must be `true`. `cron_jobs` is
+optional and omitted when an item has no cron jobs. Each cron job has a positive
+`interval_seconds` value; `chat_out` and `emote` are independently optional.
+Condition arrays are normalized to empty arrays on startup. All entries in an
+`*_if` array must match. Variable names are 1-15 character lowercase identifiers
+that start with a letter and use letters, digits, and single underscores. They
+are displayed with underscores replaced by spaces and the first letter
+capitalized. Stored numeric values are 0-100; numeric effects are signed deltas
+clamped to that range, while string effects replace values. Quoted builder values
+are always strings, including `"01"`; unquoted integer tokens are numeric.
+Session variables are kept per player and room owner, are limited to six per
+owner, and clear on disconnect or restart. Global home and every user's personal
+home are always public and cannot have `unlocked_if` rules.
 
 mail.json - contains the inbox of every user. The top level is an object keyed
 by user_id; each inbox is an array of at most `MAX_MAILS` mails.
@@ -407,7 +437,7 @@ Permission levels:
 | `/connect guest` | `connect guest` | G | Continue as an anonymous guest (`guest-1`, `guest-2`, ...). |
 | `/quit` | `@quit` | G | Disconnect from the MUD. |
 | `/password <old> <new>` | `@password` | U | Change your own password. |
-| `/help [command]` | `help` | G | List all commands, or show detailed help for one command. |
+| `/help [command]` | `help` | G | Show focused help. Topics: `tutorial`, `user`, `movement`, `building`, and `programming` (interactions, habbits, and variables). Admins also see `admin` for world management. |
 | `/who` | `@who` / `who` | G | List connected players and the room each one is in. |
 | `/whoami` | `@whoami`-style | G | Show your name, user id, admin status and home room. |
 
@@ -466,6 +496,8 @@ reserved, and creating an interaction with a reserved action name is refused.
 | `/rename here <name>` | `@rename here` | O | Rename the current room. |
 | `/describe here <text>` | `@describe here` | O | Set the description of the current room. |
 | `/private [on\|off]` | lock room | O | Toggle whether only the owner and admins can enter the room. Room 1 must remain public. |
+| `/room-unlock-rules add\|remove <variable> <equals\|more_than\|less_than> <value>` | - | O | Add or remove a room-entry variable condition. Global home and personal homes cannot have rules. |
+| `/room-unlock-rules clear` | - | O | Clear all room-entry variable conditions. |
 | `/sethome` | `@sethome` | O | Make the current room your home room. It must be a room you own. |
 | `/destroy room <room_id>` | `@recycle` | O | Delete a permitted room. Exits pointing to it are removed, and players inside are sent to room 1. Room 1 and any user's current home cannot be deleted. |
 
@@ -482,12 +514,20 @@ reserved, and creating an interaction with a reserved action name is refused.
 | Command | MOO origin | Level | Description |
 |---|---|---|---|
 | `/create <item name>` | `@create` | O | Create a new item in the current room (up to `MAX_ITEMS_PER_ROOM`). Refused when memory is low. |
+| `/item set <item> visible add\|remove <variable> <condition> <value>` | - | O | Add or remove item/creature visibility conditions. |
+| `/item set <item> visible clear` | - | O | Clear item/creature visibility conditions. |
 | `/rename <item> <name>` | `@rename` | O | Rename one of your items. |
 | `/describe <item> <text>` | `@describe` | O | Set an item's description. |
 | `/interaction add <item> <action> <flavor text>` | `@verb` | O | Add an interaction (up to `MAX_INTERACTIONS_PER_ITEM`), for example `/interaction add lever pull The floor creaks...`. Refused if `<action>` is a reserved command name, or when memory is low. |
 | `/interaction teleport <item> <action> <room_id>` | `@verb` + `move()` | O | Make an existing interaction teleport the player to `<room_id>`. Use `none` to clear it. |
 | `/interaction remove <item> <action>` | `@rmverb` | O | Remove an interaction. |
+| `/interaction require <item> <action> add\|remove <variable> <condition> <value>` | - | O | Add or remove interaction availability conditions. |
+| `/interaction require <item> <action> clear` | - | O | Clear interaction availability conditions. |
+| `/interaction set <item> <action> <variable> <value>` | - | O | Set an interaction variable effect. |
+| `/interaction clear <item> <action>` | - | O | Clear an interaction variable effect. |
 | `/interactions <item>` | `@verbs` | G | List an item's actions. The owner also sees flavor texts and targets. |
+| `/habbit set <item> <id> <variable> <value>` | - | O | Set a cron job variable effect. |
+| `/habbit clear <item> <id>` | - | O | Clear a cron job variable effect. |
 | `/move <item> to <room_id>` | `@move` | O | Move one of your items to another room you own. The item is removed and re-created in the target room with a new id. |
 | `/destroy <item>` | `@recycle` | O | Delete one of your items. |
 

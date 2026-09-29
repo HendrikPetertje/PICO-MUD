@@ -44,13 +44,13 @@ Use `/connect admin changeme` for the default administrator, or `/connect guest`
 
 ## Commands
 
-Every command begins with `/` and is case-insensitive. Plain text is sent to the current room as `/say`; `"text` and `:text` are shortcuts for saying and emoting. Use `/help` to list all commands, `/help <command>` for detailed help, or `/help tutorial` for a guided introduction.
+Every command begins with `/` and is case-insensitive. Plain text is sent to the current room as `/say`; `"text` and `:text` are shortcuts for saying and emoting. Use `/help` to choose a focused topic: `tutorial`, `user`, `movement`, `building`, or `programming`. Administrators also see `/help admin`.
 
 | Command | Description |
 | --- | --- |
 | `/connect guest` | Enter as an anonymous guest. |
 | `/connect <name>` | Log in and enter the password at the next prompt. |
-| `/help [command]` | List commands or show detailed help for one command. |
+| `/help [topic\|command]` | Choose focused help or show detailed syntax for one command. |
 | `/look` | Show the current room, its exits, items, creatures, and players. |
 | `/go <direction>` | Take an exit. Short forms such as `/n` and `/s` work. |
 | `/who` | List connected players. |
@@ -106,3 +106,146 @@ can still use its interactions. Give it timed behavior with `/habbit add "garden
 sprite" 30 hum`, then configure output with `/habbit edit "garden sprite" 1
 emote on hums softly.`. Use `/habbits "garden sprite"` to review its activity.
 Habbits run only while at least one player is in the room.
+
+## Variables For Builders
+
+Variables let builders give each player temporary progress through a room, item,
+creature, interaction, or habbit. They work well for keys, switches, disguises,
+counters, blessings, and other small pieces of story state.
+
+Variables are session state, not world state. A player's values disappear when
+they disconnect or when the Pico restarts. A value is also scoped to the owner of
+the room content that reads or changes it. If two builders both use `has_key`,
+their values do not collide. Guests receive their own temporary values too. Each
+player can hold up to six variables for each content owner.
+
+### Names And Values
+
+Variable names are lowercase identifiers between 1 and 15 characters. They must
+start with a letter and may contain letters, digits, and single underscores. For
+example, `has_key`, `door2_open`, and `mood` are valid; `HasKey`, `_key`,
+`has__key`, and `has_key_` are not. Player-facing output turns underscores into
+spaces, so `has_blue_key` appears as `Has blue key`.
+
+A stored value is either an integer from `0` through `100` or a non-empty string
+of up to 15 characters. Unquoted integers are numeric. Quote strings, including
+numeric-looking strings such as `"01"`:
+
+```text
+/interaction set "brass key" take has_key 1
+/interaction set console enter access_code "01"
+```
+
+Numeric effects are changes rather than assignments. The first command adds `1`
+to `has_key`; repeating it keeps adding until the result reaches `100`. Negative
+values subtract, and the result never drops below `0`. String effects replace
+the existing value. Players see a value when an effect changes it and can inspect
+their current values with:
+
+```text
+/look at self
+```
+
+### Conditions
+
+A condition consists of a variable, an operator, and a target value:
+
+```text
+<variable> <equals|more_than|less_than> <value>
+```
+
+Every condition configured on one room, item, or action must pass. `more_than`
+and `less_than` require numeric values on both sides. A missing variable never
+satisfies a condition.
+
+```text
+has_key equals 1
+ward more_than 20
+access_code equals "01"
+```
+
+### Rooms, Items, And Actions
+
+Room unlock rules apply to the destination room. They are checked when a player
+walks, teleports, joins another player, or uses an item portal. An unavailable
+destination remains visible through its source exit, but entry is refused.
+
+```text
+/room-unlock-rules add has_key equals 1
+/room-unlock-rules remove has_key equals 1
+/room-unlock-rules clear
+```
+
+Global home (room `1`) and every personal home are permanently public and cannot
+have room unlock rules. Items and creatures inside home rooms may still be
+hidden, conditional, or apply effects.
+
+Item visibility rules hide an item or creature entirely. Action requirements hide
+only the selected action, so an item can remain visible while offering different
+actions to different players.
+
+```text
+/item set "hidden door" visible add has_key equals 1
+/item set "hidden door" visible remove has_key equals 1
+/item set "hidden door" visible clear
+
+/interaction require "stone altar" pray add blessing more_than 0
+/interaction require "stone altar" pray clear
+```
+
+An interaction effect changes a value when the action runs. Effects happen before
+an optional portal move.
+
+```text
+/interaction set "brass key" take has_key 1
+/interaction set "rune panel" enter access_code "moon"
+/interaction clear "rune panel" enter
+```
+
+### Habbits And Effects
+
+A habbit can apply an effect independently to every player in its room whenever
+it runs. Habbits run only while the room is occupied. This makes them useful for
+a healing fountain, a bard's song, a cursed fire, or any other timed room effect.
+
+```text
+/habbit add "healing fountain" 30 restore
+/habbit set "healing fountain" 1 blessing 5
+/habbit clear "healing fountain" 1
+```
+
+The example adds `5` to each occupant's `blessing` every 30 seconds, up to `100`.
+
+### Access And Bypasses
+
+Room owners and administrators bypass room, item, creature, and action conditions
+for content owned by that room's owner. They still receive configured effects when
+they use an action or occupy a room with an active habbit. Administrators can edit
+variable metadata in any room, but cannot directly set another player's live
+values.
+
+Conditions never override ordinary access rules. Private rooms still admit only
+their owner and administrators, locked exits block everyone, and portals still
+require their destination to be accessible.
+
+### Example: A Hidden Vault
+
+Create a key whose action gives each player their own `has_key` value:
+
+```text
+/create "iron key"
+/interaction add "iron key" take You take note of the key's weight.
+/interaction set "iron key" take has_key 1
+```
+
+Hide a vault door until the player has a key, then require the same value to
+enter the vault:
+
+```text
+/create "vault door"
+/item set "vault door" visible add has_key more_than 0
+/room-unlock-rules add has_key more_than 0
+```
+
+The rules apply only to the room owner's variable scope. Finding another
+builder's key does not satisfy this vault's `has_key` condition.

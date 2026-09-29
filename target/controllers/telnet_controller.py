@@ -3,13 +3,15 @@ from controllers.session_controller import SessionController
 from controllers.notification_controller import NotificationController
 from controllers.command_controller import CommandController
 from controllers.habbit_controller import HabbitController
+from models.properties import Properties
 from views import telnet_view
 
 
 class TelnetController:
     def __init__(self, world):
         self.world = world
-        self.sessions = SessionController(world.users, world.rooms)
+        self.properties = Properties()
+        self.sessions = SessionController(world.users, world.rooms, self.properties)
         self.notifications = NotificationController(self.sessions)
         self.sessions.notifications = self.notifications
         self.commands = CommandController(world, self.sessions, self.notifications)

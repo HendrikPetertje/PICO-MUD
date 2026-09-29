@@ -44,7 +44,26 @@ def action_entry(action, detailed=False):
         result += ": " + action["flavor_text"]
         if "teleport_to_room_id" in action:
             result += " -> room " + str(action["teleport_to_room_id"])
+        if action["available_if"]:
+            result += "\n    Requires:\n"
+            result += "".join("      " + condition_entry(rule) + "\n" for rule in action["available_if"])
+        if "set_variable" in action:
+            result += "\n    Sets: " + effect_entry(action["set_variable"])
     return result + "\n"
+
+
+def property_value(value):
+    if type(value) is int:
+        return str(value)
+    return '"' + value.replace("\\", "\\\\").replace('"', '\\"') + '"'
+
+
+def condition_entry(rule):
+    return "{} {} {}".format(rule[0], rule[1], property_value(rule[2]))
+
+
+def effect_entry(effect):
+    return "{} {}".format(effect[0], property_value(effect[1]))
 
 
 def habbit_entry(job, detailed=False):
@@ -53,6 +72,8 @@ def habbit_entry(job, detailed=False):
         for field in ("emote", "chat_out"):
             if field in job:
                 result += " {}: {}".format(field, job[field])
+        if "set_variable" in job:
+            result += " sets: " + effect_entry(job["set_variable"])
     return result + "\n"
 
 
@@ -142,6 +163,12 @@ def help_topic(topic):
         yield "They belong to the owner whose world set them and disappear when the player leaves or the MUD restarts.\n\n"
         yield "Every rule in a condition list must pass. Numbers can rise or fall between 0 and 100, while strings replace a value. "
         yield "Quote strings, especially values that look like numbers, such as \"01\".\n\n"
+        yield "Rules use: <name> <equals|more_than|less_than> <value>. Add or remove one rule at a time; copy the exact rule from /examine when removing it.\n\n"
+        yield "/room-unlock-rules add|remove <name> <condition> <value> | clear\n"
+        yield "/item set <item> visible add|remove <name> <condition> <value> | clear\n"
+        yield "/interaction require <item> <action> add|remove <name> <condition> <value> | clear\n"
+        yield "/interaction set <item> <action> <name> <value> | clear <item> <action>\n"
+        yield "/habbit set <item> <id> <name> <value> | clear <item> <id>\n\n"
     else:
         yield "Administration\n\n"
         yield "Administration helps keep the shared world welcoming and running smoothly. These commands carry weight because they affect other players, accounts, or the live server.\n\n"

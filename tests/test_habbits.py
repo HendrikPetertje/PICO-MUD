@@ -147,6 +147,7 @@ class HabbitsTest(unittest.TestCase):
         programming = "".join(game_view.help_topic("programming"))
         self.assertIn("Variables remember small things", programming)
         self.assertIn('values that look like numbers, such as "01"', programming)
+        self.assertIn("/interaction require <item> <action> add|remove", programming)
         self.assertNotIn("/help admin", "".join(game_view.help_topics()))
         self.assertIn("/help admin - Manage players, the world, and server operations. [A]",
                       "".join(game_view.help_topics(True)))
@@ -224,6 +225,17 @@ class HabbitsTest(unittest.TestCase):
         self.items.interaction(1, item_id, "add", "read", "The sign is faded.")
         lines = "".join(controller.item_view(Viewer(), self.items.get(1, item_id)))
         self.assertIn("Actions:\n  read\n", lines)
+
+    def test_owner_action_details_show_requirements_and_effects(self):
+        item_id = self.items.create(1, "dish washer")
+        self.items.interaction(1, item_id, "add", "put_cup", "You put the cup away.")
+        self.items.rules(1, item_id, "available_if", "add", ["has_cup", "equals", "yes"], "put_cup")
+        self.items.property_effect(1, item_id, "set_variable", ["has_cup", "no"], action_name="put_cup")
+        world = type("World", (), {"items": self.items, "rooms": self.rooms,
+                                     "users": type("Users", (), {"data": []})()})()
+        lines = "".join(RoomController(world, Sessions([]), Notifications()).item_view(Editor(), self.items.get(1, item_id), True))
+        self.assertIn('Requires:\n      has_cup equals "yes"', lines)
+        self.assertIn('Sets: has_cup "no"', lines)
 
     def test_habbit_command_forms_and_listing(self):
         item_id = self.items.create(1, "owl")

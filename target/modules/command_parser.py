@@ -1,6 +1,14 @@
 from models.storage import GameError, require
 
 
+def quote_closer(value):
+    if value == '"':
+        return '"'
+    if value == '“':
+        return '”'
+    return None
+
+
 class Arguments:
     """Consume target tokens while retaining untouched final free text."""
     def __init__(self, source):
@@ -18,11 +26,12 @@ class Arguments:
         if self.position == len(source):
             require(optional, "Missing argument.")
             return None
-        self.quoted = source[self.position] == '"'
+        closer = quote_closer(source[self.position])
+        self.quoted = closer is not None
         if not self.quoted:
             start = self.position
             while self.position < len(source) and not source[self.position].isspace():
-                require(source[self.position] != '"', "Quote a whole argument.")
+                require(quote_closer(source[self.position]) is None, "Quote a whole argument.")
                 self.position += 1
             return source[start:self.position]
         self.position += 1
@@ -30,10 +39,10 @@ class Arguments:
         while self.position < len(source):
             char = source[self.position]
             self.position += 1
-            if char == '"':
+            if char == closer:
                 require(self.position == len(source) or source[self.position].isspace(), "Space required after quote.")
                 return "".join(result)
-            if char == "\\":
+            if char == "\\" and closer == '"':
                 require(self.position < len(source) and source[self.position] in '\\"', "Invalid escape.")
                 char = source[self.position]
                 self.position += 1
@@ -43,7 +52,7 @@ class Arguments:
     def rest(self):
         rest = self.remaining()
         require(bool(rest), "Missing text.")
-        if rest.startswith('"'):
+        if quote_closer(rest[0]) is not None:
             value = self.pop()
             self.end()
             return value

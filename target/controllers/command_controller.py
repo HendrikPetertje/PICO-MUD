@@ -1,7 +1,7 @@
 from models.storage import require, GameError
 from models.rooms import DIRECTIONS
 from modules.commands import COMMANDS, REGISTRY
-from modules.command_parser import Arguments
+from modules.command_parser import Arguments, quote_closer
 from controllers.room_controller import RoomController
 from controllers.item_controller import ItemController
 from controllers.communication_controller import CommunicationController
@@ -70,7 +70,7 @@ class CommandController:
             require(session.playing, "Use /connect <name> [password] or /connect guest.")
             if line.startswith(':'):
                 return self.communication.handle(session, "emote", Arguments(line[1:]))
-            return self.communication.handle(session, "say", Arguments(line[1:] if line.startswith('"') else line))
+            return self.communication.handle(session, "say", Arguments(line[1:] if quote_closer(line[0]) else line))
         args = Arguments(line[1:])
         word = args.pop().lower()
         entry = REGISTRY.get(word)

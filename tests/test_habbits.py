@@ -11,6 +11,7 @@ from controllers.habbit_controller import HabbitController
 from controllers.item_controller import ItemController
 from controllers.room_controller import RoomController
 from controllers.command_controller import CommandController
+from controllers.mail_controller import MailController
 from main import validate
 from models.items import Items
 from models.properties import Properties, display_name
@@ -393,6 +394,51 @@ class HabbitsTest(unittest.TestCase):
         self.assertEqual(item["visible_if"], [["has_key", "equals", "01"]])
         self.assertEqual(item["interactions"][0]["available_if"], [["has_key", "equals", "01"]])
         self.assertEqual(item["interactions"][0]["set_variable"], ["opened", 1])
+
+    def test_arguments_accept_smart_quotes_and_preserve_ascii_escapes(self):
+        args = Arguments('“coffee machine” “01”')
+        self.assertEqual(args.pop(), "coffee machine")
+        self.assertTrue(args.quoted)
+        self.assertEqual(args.pop(), "01")
+        self.assertTrue(args.quoted)
+        self.assertEqual(Arguments('"coffee \\"machine\\""').pop(), 'coffee "machine"')
+        for source in ('“coffee machine', '“coffee machine"'):
+            with self.assertRaises(GameError):
+                Arguments(source).pop()
+        with self.assertRaises(GameError):
+            Arguments('coffee“machine”').pop()
+
+    def test_smart_quotes_work_for_item_actions_speech_and_mail_titles(self):
+        item_id = self.items.create(1, "coffee machine")
+        self.items.interaction(1, item_id, "add", "push", "Coffee is ready.")
+        world = type("World", (), {"items": self.items, "rooms": self.rooms})()
+        player = Player(2)
+        controller = ItemController(world, RoomController(world, Sessions([]), Notifications()))
+        self.assertEqual(controller.use(player, "push", Arguments('“coffee machine”')), "Coffee is ready.\n")
+        self.assertEqual(controller.use(player, "push", Arguments('"coffee machine"')), "Coffee is ready.\n")
+
+        received = []
+        command = CommandController.__new__(CommandController)
+        command.communication = type("Communication", (), {
+            "handle": lambda _, session, verb, args: received.append((verb, args.rest()))
+        })()
+        session = type("Session", (), {"playing": True})()
+        command.dispatch(session, "hello")
+        command.dispatch(session, "“hello")
+        command.dispatch(session, ":waves")
+        self.assertEqual(received, [("say", "hello"), ("say", "hello"), ("emote", "waves")])
+
+        sent = []
+        mail = MailController(
+            type("World", (), {
+                "users": type("Users", (), {"named": lambda _, name: {"user_id": 2}})(),
+                "mail": type("Mail", (), {"send": lambda _, *values: sent.append(values)})(),
+            })(),
+            type("Notifications", (), {"user": lambda *_: None})(),
+        )
+        mail.handle(type("Session", (), {"user_id": 1, "name": lambda _: "sender"})(),
+                    Arguments('send recipient “coffee title” = hello'))
+        self.assertEqual(sent, [(1, 2, "coffee title", "hello")])
 
     def test_conditions_hide_content_and_owner_bypasses(self):
         item_id = self.items.create(1, "treasure")

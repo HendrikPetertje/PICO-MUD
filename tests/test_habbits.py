@@ -13,7 +13,7 @@ from controllers.room_controller import RoomController
 from controllers.command_controller import CommandController
 from main import validate
 from models.items import Items
-from models.properties import Properties
+from models.properties import Properties, display_name
 from models.properties import conditions, effect
 from models import migrations
 from models.rooms import Rooms
@@ -333,6 +333,7 @@ class HabbitsTest(unittest.TestCase):
             with self.assertRaises(GameError):
                 effect([name, "yes"])
         self.assertEqual(effect(["has_blue_key", "01"]), ["has_blue_key", "01"])
+        self.assertEqual(display_name("has_blue_key"), "Has blue key")
 
     def test_room_schema_migration_is_idempotent(self):
         self.rooms.data[0]["items"] = [{"id": 1, "name": "Box", "description": "",
@@ -441,6 +442,16 @@ class HabbitsTest(unittest.TestCase):
         visitor.properties.apply(visitor, 1, ["has_key", "yes"])
         self.assertTrue(visitor.properties.allowed(visitor, 1, self.items.get(1, item_id)["visible_if"]))
         self.assertTrue(visitor.properties.allowed(visitor, 1, self.items.get(1, item_id)["interactions"][0]["available_if"]))
+
+    def test_interaction_property_change_has_a_labeled_block(self):
+        item_id = self.items.create(1, "coffee machine")
+        self.items.interaction(1, item_id, "add", "push", "Coffee is ready.")
+        self.items.property_effect(1, item_id, "set_variable", ["has_cup", "yes"], action_name="push")
+        world = type("World", (), {"items": self.items, "rooms": self.rooms})()
+        controller = ItemController(world, RoomController(world, Sessions([]), Notifications()))
+        player = Player(2)
+        self.assertEqual(controller.use(player, "push", Arguments('"coffee machine"')),
+                         "Coffee is ready.\n\nChanges to you:\n  Has cup: yes\n")
 
     def test_cron_effect_updates_each_occupant(self):
         item_id = self.items.create(1, "bard")

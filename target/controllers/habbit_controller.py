@@ -33,7 +33,7 @@ class HabbitController:
                             if session.room_id == room_id:
                                 try:
                                     key, value = session.properties.apply(session, room["owner_id"], job["set_variable"])
-                                    self.notifications.send(session, "{}: {}".format(display_name(key), value))
+                                    self.notifications.send(session, game_view.property_change(display_name(key), value))
                                 except GameError as error:
                                     self.notifications.send(session, str(error))
         self.elapsed = {key: value for key, value in self.elapsed.items() if key in active}

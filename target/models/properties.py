@@ -23,7 +23,8 @@ def property_name(value):
 
 
 def display_name(value):
-    return value.replace("_", " ").capitalize()
+    value = value.replace("_", " ")
+    return value[0].upper() + value[1:]
 
 
 def condition(value):

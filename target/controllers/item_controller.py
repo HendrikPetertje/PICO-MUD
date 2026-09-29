@@ -148,7 +148,7 @@ class ItemController:
 
     def with_property(self, session, key, value, action):
         from models.properties import display_name
-        message = action["flavor_text"] + "\n{}: {}\n".format(display_name(key), value)
+        message = action["flavor_text"] + "\n\n" + game_view.property_change(display_name(key), value) + "\n"
         destination = action.get("teleport_to_room_id")
         if destination is None:
             return message

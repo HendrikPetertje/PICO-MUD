@@ -64,8 +64,9 @@ def speech(name, message, emote=False):
     return name + (" " if emote else ' says: "') + message + ("" if emote else '"')
 
 
-def property_change(name, value):
-    return "Changes to you:\n  {}: {}".format(name, value)
+def property_change(name, value, changed=True):
+    return "Changes to you:\n  {}: {}{}".format(
+        name, value, "" if changed else " - remains unchanged")
 
 
 def presence(name, event):

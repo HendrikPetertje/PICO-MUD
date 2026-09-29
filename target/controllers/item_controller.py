@@ -134,8 +134,8 @@ class ItemController:
         action = actions[0] if verb == "use" else next((entry for entry in actions if entry["action"] == verb), None)
         require(action is not None, "No such action.")
         if "set_variable" in action:
-            key, value = session.properties.apply(session, owner, action["set_variable"])
-            return self.with_property(session, key, value, action)
+            key, value, changed = session.properties.apply(session, owner, action["set_variable"])
+            return self.with_property(session, key, value, changed, action)
         flavor = action["flavor_text"]
         destination = action.get("teleport_to_room_id")
         if destination is None:
@@ -146,9 +146,9 @@ class ItemController:
             return flavor + "\n" + str(error) + "\n"
         return self.rooms.with_text(flavor, self.rooms.view(session))
 
-    def with_property(self, session, key, value, action):
+    def with_property(self, session, key, value, changed, action):
         from models.properties import display_name
-        message = action["flavor_text"] + "\n\n" + game_view.property_change(display_name(key), value) + "\n"
+        message = action["flavor_text"] + "\n\n" + game_view.property_change(display_name(key), value, changed) + "\n"
         destination = action.get("teleport_to_room_id")
         if destination is None:
             return message

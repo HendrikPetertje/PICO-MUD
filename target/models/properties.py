@@ -91,5 +91,6 @@ class Properties:
             result = update
         require(key in entries or len(entries) < MAX_PROPERTIES_PER_OWNER,
                 "Property limit reached for this owner.")
+        changed = current != result
         entries[key] = result
-        return key, result
+        return key, result, changed

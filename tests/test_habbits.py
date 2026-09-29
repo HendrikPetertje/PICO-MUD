@@ -315,14 +315,14 @@ class HabbitsTest(unittest.TestCase):
         properties = Properties()
         player = type("Player", (), {"user_id": 2, "admin": lambda _: False})()
         self.assertFalse(properties.allowed(player, 1, [["key", "equals", 1]]))
-        self.assertEqual(properties.apply(player, 1, ["health", 99]), ("health", 99))
-        self.assertEqual(properties.apply(player, 1, ["health", 5]), ("health", 100))
+        self.assertEqual(properties.apply(player, 1, ["health", 99]), ("health", 99, True))
+        self.assertEqual(properties.apply(player, 1, ["health", 5]), ("health", 100, True))
         self.assertTrue(properties.allowed(player, 1, [["health", "more_than", 20]]))
         for number in range(5):
             properties.apply(player, 1, ["v_" + str(number), "x"])
         with self.assertRaises(GameError):
             properties.apply(player, 1, ["too_many", "x"])
-        self.assertEqual(properties.apply(player, 3, ["other", "x"]), ("other", "x"))
+        self.assertEqual(properties.apply(player, 3, ["other", "x"]), ("other", "x", True))
         with self.assertRaises(GameError):
             conditions([["key", "invalid", 1]])
         with self.assertRaises(GameError):
@@ -452,11 +452,13 @@ class HabbitsTest(unittest.TestCase):
         player = Player(2)
         self.assertEqual(controller.use(player, "push", Arguments('"coffee machine"')),
                          "Coffee is ready.\n\nChanges to you:\n  Has cup: yes\n")
+        self.assertEqual(controller.use(player, "push", Arguments('"coffee machine"')),
+                         "Coffee is ready.\n\nChanges to you:\n  Has cup: yes - remains unchanged\n")
 
-    def test_cron_effect_updates_each_occupant(self):
+    def test_cron_effect_updates_each_occupant_and_silences_unchanged_values(self):
         item_id = self.items.create(1, "bard")
         self.items.cron(1, item_id, "add", field="sing", value=1)
-        self.items.property_effect(1, item_id, "set_variable", ["blessing", 1], cron_id=1)
+        self.items.property_effect(1, item_id, "set_variable", ["bard_mood", "calm"], cron_id=1)
         players = []
         for number in range(2):
             player = type("Player", (), {"room_id": 1, "user_id": number + 2,
@@ -465,7 +467,10 @@ class HabbitsTest(unittest.TestCase):
         sessions = type("Sessions", (), {"live": lambda _: players})()
         notifications = Notifications()
         HabbitController(type("World", (), {"rooms": self.rooms})(), sessions, notifications).tick(1000)
-        self.assertEqual([p.properties.values(p) for p in players], [[(1, "blessing", 1)], [(1, "blessing", 1)]])
+        self.assertEqual([p.properties.values(p) for p in players], [[(1, "bard_mood", "calm")], [(1, "bard_mood", "calm")]])
+        notifications.messages = []
+        HabbitController(type("World", (), {"rooms": self.rooms})(), sessions, notifications).tick(1000)
+        self.assertEqual(notifications.messages, [])
 
 
 if __name__ == "__main__":
